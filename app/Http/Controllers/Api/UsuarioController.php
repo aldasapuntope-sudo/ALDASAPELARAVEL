@@ -14,6 +14,7 @@ class UsuarioController extends Controller
         $resultado = UsuarioModel::tipoUsuario();
         return response()->json($resultado);
     }
+    
 
     public function tipoDocumento()
     {

@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\UsuarioController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AnunciosController;
+
 
 Route::prefix('Loginform')->group(function () { 
     Route::post('/auth/google', [AuthController::class, 'loginform']); 
@@ -25,4 +27,11 @@ Route::prefix('usuariosexterno')->group(function () {
 Route::prefix('miperfil')->group(function () { 
     Route::get('/{codigo}', [UsuarioController::class, 'miperfil']); 
     Route::put('/actualizar/{id}', [UsuarioController::class, 'actualizarperfil']); 
+});
+
+Route::prefix('misanuncios')->group(function () {
+    Route::get('/tipos-propiedad', [AnunciosController::class, 'tiposPropiedad']); 
+    Route::get('/tipos-operacion', [AnunciosController::class, 'tiposOperacion']); 
+    Route::get('/tipos-ubicaciones', [AnunciosController::class, 'tiposUbicaciones']); 
+    Route::post('/registrar', [AnunciosController::class, 'registrar']);
 });

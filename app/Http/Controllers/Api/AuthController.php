@@ -97,6 +97,8 @@ class AuthController extends Controller
             
 
             $data = [
+                'success' => true,
+                'token' => $token,
                 'nombre' => $givenName ?? $name,
                 'apellido' => $familyName ?? '',
                 'email' => $email,
