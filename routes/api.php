@@ -33,5 +33,8 @@ Route::prefix('misanuncios')->group(function () {
     Route::get('/tipos-propiedad', [AnunciosController::class, 'tiposPropiedad']); 
     Route::get('/tipos-operacion', [AnunciosController::class, 'tiposOperacion']); 
     Route::get('/tipos-ubicaciones', [AnunciosController::class, 'tiposUbicaciones']); 
-    Route::post('/registrar', [AnunciosController::class, 'registrar']);
+    Route::post('/registrar', [AnunciosController::class, 'registraranuncio']);
+    Route::get('/listar/{is_publish}/{id}', [AnunciosController::class, 'listaranuncio']); 
+    Route::put('/actualizar/{id}', [AnunciosController::class, 'actualizaranuncio']); 
+    Route::get('/caracteristicas-catalogo', [AnunciosController::class, 'categoriasCatalogo']); 
 });

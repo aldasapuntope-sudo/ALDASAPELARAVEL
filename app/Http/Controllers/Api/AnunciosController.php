@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\AnunciosModel;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-
+use Illuminate\Support\Facades\DB;
 class AnunciosController extends Controller
 {
     public function tiposPropiedad()
@@ -28,7 +28,7 @@ class AnunciosController extends Controller
         return response()->json($resultado);
     }
 
-    public function registrar(Request $request)
+    public function registraranuncio(Request $request)
     {
         try {
             // 1️⃣ Validar campos obligatorios
@@ -39,57 +39,155 @@ class AnunciosController extends Controller
                 'titulo' => 'required|string|max:255',
                 'descripcion' => 'required|string',
                 'precio' => 'required|numeric|min:0',
-                'dormitorios' => 'nullable|integer|min:0',
-                'banos' => 'nullable|integer|min:0',
-                'area' => 'required|string|max:50',
                 'imagen_principal' => 'nullable|image|max:2048', // 2MB máximo
                 'user_id' => 'required|integer',
-                
             ]);
 
-            // 2️⃣ Subir imagen si existe
+            // 2️⃣ Subir imagen (si existe)
             $rutaImagen = null;
             if ($request->hasFile('imagen_principal')) {
                 $archivo = $request->file('imagen_principal');
                 $nombre = 'propiedad_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
 
-                // 📍 Guardar en el escritorio (ajusta la ruta)
-                $directorioEscritorio = 'C:/Users/ALDASA/Desktop/propiedades';
+                $directorioEscritorio = 'C:/xampp/htdocs/propiedades';
                 if (!file_exists($directorioEscritorio)) {
                     mkdir($directorioEscritorio, 0777, true);
                 }
 
                 $archivo->move($directorioEscritorio, $nombre);
-                $rutaImagen = $directorioEscritorio . DIRECTORY_SEPARATOR . $nombre;
-                
+                $rutaImagen = 'http://localhost/propiedades/' . $nombre;
             }
 
-            // 3️⃣ Crear anuncio mediante el modelo
-            $id = AnunciosModel::crearAnuncio($validated, $rutaImagen);
+            // 3️⃣ Crear el anuncio principal (propiedad)
+            $idPropiedad = AnunciosModel::crearAnuncio($validated, $rutaImagen);
 
-            // 4️⃣ Respuesta exitosa
+            // 4️⃣ Guardar características (si existen)
+            if ($request->has('caracteristicas')) {
+                $caracteristicas = json_decode($request->caracteristicas, true);
+
+                if (is_array($caracteristicas) && count($caracteristicas) > 0) {
+                    AnunciosModel::guardarCaracteristicas($idPropiedad, $caracteristicas);
+                }
+            }
+
+            // 5️⃣ Respuesta exitosa
             return response()->json([
-                'estado' => '1',
+                'estado' => 1,
                 'mensaje' => 'Anuncio registrado correctamente.',
-                'id' => $id
+                'id' => $idPropiedad,
             ], 201);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
-                'estado' => '0',
+                'estado' => 0,
+                'mensaje' => 'Error de validación.',
+                'errores' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Error interno del servidor.',
+                'detalle' => $e->getMessage(),
+                'linea' => $e->getLine(),
+            ], 500);
+        }
+    }
+
+
+    public function listaranuncio($idpublish, $id)
+    {
+        $resultado = AnunciosModel::listaranuncio($idpublish, $id);
+        return response()->json($resultado);
+    }
+
+    public function actualizaranuncio(Request $request, $id)
+    {
+        try {
+            // 1️⃣ Validar los campos
+            $validated = $request->validate([
+                'tipo_id' => 'required|integer',
+                'operacion_id' => 'required|integer',
+                'ubicacion_id' => 'required|integer',
+                'titulo' => 'required|string|max:255',
+                'descripcion' => 'required|string',
+                'precio' => 'required|numeric|min:0',
+                
+            ]);
+
+            // 2️⃣ Buscar anuncio existente
+            $anuncio = DB::table('propiedades')->where('id', $id)->first();
+
+            if (!$anuncio) {
+                return response()->json([
+                    'estado' => 0,
+                    'mensaje' => 'Anuncio no encontrado.'
+                ], 404);
+            }
+
+            // 3️⃣ Manejar imagen
+            $rutaImagen = $anuncio->imagen_principal; // mantener la anterior si no hay nueva
+
+            if ($request->hasFile('imagen_principal')) {
+                $archivo = $request->file('imagen_principal');
+                $nombre = 'propiedad_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+
+                $directorioEscritorio = 'C:/xampp/htdocs/propiedades';
+                if (!file_exists($directorioEscritorio)) {
+                    mkdir($directorioEscritorio, 0777, true);
+                }
+
+                $archivo->move($directorioEscritorio, $nombre);
+                $rutaImagen = 'http://localhost/propiedades/' . $nombre;
+            }
+
+            // 4️⃣ Actualizar el anuncio
+            AnunciosModel::actualizarAnuncio($id, $validated, $rutaImagen);
+
+            // 5️⃣ Actualizar características
+            if ($request->has('caracteristicas')) {
+                $caracteristicas = json_decode($request->caracteristicas, true);
+
+                if (is_array($caracteristicas)) {
+                    // eliminar las antiguas
+                    DB::table('propiedad_caracteristicas')
+                        ->where('propiedad_id', $id)
+                        ->delete();
+
+                    // guardar las nuevas
+                    AnunciosModel::guardarCaracteristicas($id, $caracteristicas);
+                }
+            }
+
+            // 6️⃣ Respuesta exitosa
+            return response()->json([
+                'estado' => 1,
+                'mensaje' => 'Anuncio actualizado correctamente.'
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'estado' => 0,
                 'mensaje' => 'Error de validación.',
                 'errores' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'estado' => '0',
+                'estado' => 0,
                 'mensaje' => 'Error interno del servidor.',
                 'detalle' => $e->getMessage(),
                 'linea' => $e->getLine(),
                 'archivo' => $e->getFile(),
-                'traza' => $e->getTraceAsString(), // opcional, muestra toda la traza
             ], 500);
         }
     }
+
+
+    public function categoriasCatalogo()
+    {
+        $resultado = AnunciosModel::categoriasCatalogo();
+        return response()->json($resultado);
+    }
+
+    
 
 }
