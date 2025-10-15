@@ -45,20 +45,107 @@ class AnunciosModel extends Model
 
     public static function guardarCaracteristicas($propiedadId, $caracteristicas)
     {
-        $rows = [];
+        // Obtener todas las características actuales de la propiedad
+        $caracActuales = DB::table('propiedad_caracteristicas')
+            ->where('propiedad_id', $propiedadId)
+            ->pluck('valor', 'caracteristica_id') // ['id_carac' => 'valor']
+            ->toArray();
+
+        // IDs de las características enviadas desde el frontend
+        $idsEnviados = array_map(fn($c) => $c['id'], $caracteristicas);
+
+        // 1️⃣ Insertar nuevas y actualizar existentes
         foreach ($caracteristicas as $carac) {
-            $rows[] = [
-                'propiedad_id' => $propiedadId,
-                'caracteristica_id' => $carac['id'],
-                'valor' => $carac['valor'] ?? '',
-                'is_active' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+            $id = $carac['id'];
+            $valor = $carac['valor'] ?? '';
+
+            if (array_key_exists($id, $caracActuales)) {
+                // Ya existe → actualizar valor si cambió
+                if ($caracActuales[$id] !== $valor) {
+                    DB::table('propiedad_caracteristicas')
+                        ->where('propiedad_id', $propiedadId)
+                        ->where('caracteristica_id', $id)
+                        ->update([
+                            'valor' => $valor,
+                            'updated_at' => now(),
+                        ]);
+                }
+            } else {
+                // No existe → insertar
+                DB::table('propiedad_caracteristicas')->insert([
+                    'propiedad_id' => $propiedadId,
+                    'caracteristica_id' => $id,
+                    'valor' => $valor,
+                    'is_active' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
         }
 
-        DB::table('propiedad_caracteristicas')->insert($rows);
+        // 2️⃣ Eliminar las características que fueron desmarcadas
+        $idsAEliminar = array_diff(array_keys($caracActuales), $idsEnviados);
+        if (!empty($idsAEliminar)) {
+            DB::table('propiedad_caracteristicas')
+                ->where('propiedad_id', $propiedadId)
+                ->whereIn('caracteristica_id', $idsAEliminar)
+                ->delete();
+        }
     }
+
+    public static function guardarCaracteristicasSecundarias($propiedadId, $caracteristicas_secundarias)
+    {
+        // Obtener todas las amenities actuales de la propiedad
+        $caracActuales = DB::table('propiedad_amenities')
+            ->where('propiedad_id', $propiedadId)
+            ->pluck('is_active', 'amenity_id') // ['id_amenity' => is_active]
+            ->toArray();
+
+        // IDs de las características enviadas desde el frontend
+        $idsEnviados = array_map(fn($c) => $c['id'], $caracteristicas_secundarias);
+
+        // 1️⃣ Insertar nuevas o reactivar existentes
+        foreach ($caracteristicas_secundarias as $carac) {
+            $id = $carac['id'];
+
+            if (array_key_exists($id, $caracActuales)) {
+                // Ya existe → reactivar si estaba inactiva
+                if ($caracActuales[$id] == 0) {
+                    DB::table('propiedad_amenities')
+                        ->where('propiedad_id', $propiedadId)
+                        ->where('amenity_id', $id)
+                        ->update([
+                            'is_active' => 1,
+                            'updated_at' => now(),
+                        ]);
+                }
+            } else {
+                // No existe → insertar
+                DB::table('propiedad_amenities')->insert([
+                    'propiedad_id' => $propiedadId,
+                    'amenity_id' => $id,
+                    'is_active' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        // 2️⃣ Desactivar las que fueron desmarcadas
+        $idsAEliminar = array_diff(array_keys($caracActuales), $idsEnviados);
+        if (!empty($idsAEliminar)) {
+            DB::table('propiedad_amenities')
+                ->where('propiedad_id', $propiedadId)
+                ->whereIn('amenity_id', $idsAEliminar)
+                ->update([
+                    'is_active' => 0,
+                    'updated_at' => now(),
+                ]);
+        }
+    }
+
+
+
 
     public static function listaranuncio($idpublish, $id)
     {
@@ -87,6 +174,22 @@ class AnunciosModel extends Model
         return DB::select("SELECT * FROM caracteristicas_catalogo WHERE is_active = 1 ORDER BY nombre ASC");
     }
     
+    public static function categoriasCatalogoid($id)
+    {
+        return DB::select("SELECT * FROM propiedad_caracteristicas WHERE propiedad_id = $id AND is_active = 1");
+    }
+
+
+    public static function amenities()
+    {
+        return DB::select("SELECT * FROM amenities WHERE is_active = 1 ORDER BY nombre ASC");
+    }
+    
+    public static function amenitiesid($id)
+    {
+        return DB::select("SELECT * FROM propiedad_amenities WHERE propiedad_id = $id AND is_active = 1");
+    }
+
 
 
 }

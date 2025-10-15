@@ -70,6 +70,15 @@ class AnunciosController extends Controller
                 }
             }
 
+            if ($request->has('caracteristicas_secundarias')) {
+                $caracteristicas_secundarias = json_decode($request->caracteristicas_secundarias, true);
+
+                if (is_array($caracteristicas_secundarias) && count($caracteristicas_secundarias) > 0) {
+                    AnunciosModel::guardarCaracteristicassecundarias($idPropiedad, $caracteristicas_secundarias);
+                }
+            }
+
+
             // 5️⃣ Respuesta exitosa
             return response()->json([
                 'estado' => 1,
@@ -149,12 +158,20 @@ class AnunciosController extends Controller
 
                 if (is_array($caracteristicas)) {
                     // eliminar las antiguas
-                    DB::table('propiedad_caracteristicas')
-                        ->where('propiedad_id', $id)
-                        ->delete();
-
+                    
                     // guardar las nuevas
                     AnunciosModel::guardarCaracteristicas($id, $caracteristicas);
+                }
+            }
+
+            if ($request->has('caracteristicas_secundarias')) {
+                $caracteristicas_secundarias = json_decode($request->caracteristicas_secundarias, true);
+
+                if (is_array($caracteristicas_secundarias)) {
+                    // eliminar las antiguas
+                    
+                    // guardar las nuevas
+                    AnunciosModel::guardarCaracteristicassecundarias($id, $caracteristicas_secundarias);
                 }
             }
 
@@ -188,6 +205,21 @@ class AnunciosController extends Controller
         return response()->json($resultado);
     }
 
+    public function categoriasCatalogoid($id)
+    {
+        $resultado = AnunciosModel::categoriasCatalogoid($id);
+        return response()->json($resultado);
+    }
     
+    public function amenities()
+    {
+        $resultado = AnunciosModel::amenities();
+        return response()->json($resultado);
+    }
 
+    public function amenitiesid($id)
+    {
+        $resultado = AnunciosModel::amenitiesid($id);
+        return response()->json($resultado);
+    }
 }

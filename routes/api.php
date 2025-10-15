@@ -37,4 +37,7 @@ Route::prefix('misanuncios')->group(function () {
     Route::get('/listar/{is_publish}/{id}', [AnunciosController::class, 'listaranuncio']); 
     Route::put('/actualizar/{id}', [AnunciosController::class, 'actualizaranuncio']); 
     Route::get('/caracteristicas-catalogo', [AnunciosController::class, 'categoriasCatalogo']); 
+    Route::get('/caracteristicas-catalogo/{id}', [AnunciosController::class, 'categoriasCatalogoid']); 
+    Route::get('/propiedad_amenities', [AnunciosController::class, 'amenities']); 
+    Route::get('/propiedad_amenities/{id}', [AnunciosController::class, 'amenitiesid']); 
 });
