@@ -147,10 +147,57 @@ class AnunciosModel extends Model
 
 
 
-    public static function listaranuncio($idpublish, $id)
+    /*public static function listaranuncio($idpublish, $id)
     {
         return DB::select("SELECT p.id, u.id as id_ubicacion, u.nombre as ubicacion, tp.id as id_tipopropiedad, tp.nombre as tipo_propiedad, o.id as id_operacion, o.nombre as operaciones, p.titulo, p.descripcion, p.precio, p.imagen_principal, p.is_active_publish FROM propiedades p INNER JOIN ubicaciones u ON p.ubicacion_id = u.id INNER JOIN tipos_propiedad tp ON p.tipo_id = tp.id INNER JOIN operaciones o ON p.operacion_id = o.id WHERE p.is_active = 1 AND p.is_active_publish = $idpublish AND p.user_id = $id ORDER BY p.id ASC");
+    }*/
+    public static function listaranuncio($idpublish, $id)
+    {
+        // Traer los anuncios base
+        $anuncios = DB::select("
+            SELECT 
+                p.id, 
+                u.id as id_ubicacion, 
+                u.nombre as ubicacion, 
+                tp.id as id_tipopropiedad, 
+                tp.nombre as tipo_propiedad, 
+                o.id as id_operacion, 
+                o.nombre as operaciones, 
+                p.titulo, 
+                p.descripcion, 
+                p.precio, 
+                p.imagen_principal, 
+                p.is_active_publish 
+            FROM propiedades p 
+            INNER JOIN ubicaciones u ON p.ubicacion_id = u.id 
+            INNER JOIN tipos_propiedad tp ON p.tipo_id = tp.id 
+            INNER JOIN operaciones o ON p.operacion_id = o.id 
+            WHERE p.is_active = 1 
+            AND p.is_active_publish = $idpublish 
+            AND p.user_id = $id 
+            ORDER BY p.id ASC
+        ");
+
+        // Para cada anuncio, traer sus características principales y secundarias
+        foreach ($anuncios as $anuncio) {
+            // Características principales
+            $anuncio->caracteristicas = DB::table('propiedad_caracteristicas as pc')
+                ->join('caracteristicas_catalogo as cc', 'pc.caracteristica_id', '=', 'cc.id')
+                ->select('cc.nombre', 'cc.icono', 'cc.unidad', 'pc.valor')
+                ->where('pc.propiedad_id', $anuncio->id)
+                ->get();
+
+            // Características secundarias (amenities)
+            $anuncio->amenities = DB::table('propiedad_amenities as pa')
+                ->join('amenities as ac', 'pa.amenity_id', '=', 'ac.id')
+                ->select('ac.nombre', 'ac.icon_url')
+                ->where('pa.propiedad_id', $anuncio->id)
+                ->get();
+        }
+
+        return $anuncios;
     }
+
 
     public static function actualizarAnuncio($id, $data, $rutaImagen = null)
     {
@@ -169,25 +216,25 @@ class AnunciosModel extends Model
     }
 
 
-    public static function categoriasCatalogo()
+    public static function categoriasCatalogo($tpropiedad)
     {
-        return DB::select("SELECT * FROM caracteristicas_catalogo WHERE is_active = 1 ORDER BY nombre ASC");
+        return DB::select("SELECT * FROM caracteristicas_catalogo WHERE tpropiedad_id = $tpropiedad AND is_active = 1 ORDER BY nombre ASC");
     }
     
     public static function categoriasCatalogoid($id)
     {
-        return DB::select("SELECT * FROM propiedad_caracteristicas WHERE propiedad_id = $id AND is_active = 1");
+        return DB::select("SELECT pc.id, pc.caracteristica_id, pc.valor, cc.nombre, cc.icono, pc.is_active FROM propiedad_caracteristicas pc INNER JOIN caracteristicas_catalogo cc on pc.caracteristica_id = cc.id WHERE pc.propiedad_id = $id AND pc.is_active = 1");
     }
 
 
-    public static function amenities()
+    public static function amenities($tpropiedad)
     {
-        return DB::select("SELECT * FROM amenities WHERE is_active = 1 ORDER BY nombre ASC");
+        return DB::select("SELECT * FROM amenities WHERE tpropiedad_id = $tpropiedad AND  is_active = 1 ORDER BY nombre ASC");
     }
     
     public static function amenitiesid($id)
     {
-        return DB::select("SELECT * FROM propiedad_amenities WHERE propiedad_id = $id AND is_active = 1");
+        return DB::select("SELECT pa.id, pa.amenity_id, a.nombre, a.icon_url, pa.is_active FROM propiedad_amenities pa INNER JOIN amenities a on pa.amenity_id = a.id WHERE pa.propiedad_id = $id AND pa.is_active = 1");
     }
 
 

@@ -199,9 +199,9 @@ class AnunciosController extends Controller
     }
 
 
-    public function categoriasCatalogo()
+    public function categoriasCatalogo($tpropiedad)
     {
-        $resultado = AnunciosModel::categoriasCatalogo();
+        $resultado = AnunciosModel::categoriasCatalogo($tpropiedad);
         return response()->json($resultado);
     }
 
@@ -211,9 +211,9 @@ class AnunciosController extends Controller
         return response()->json($resultado);
     }
     
-    public function amenities()
+    public function amenities($tpropiedad)
     {
-        $resultado = AnunciosModel::amenities();
+        $resultado = AnunciosModel::amenities($tpropiedad);
         return response()->json($resultado);
     }
 
