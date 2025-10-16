@@ -41,6 +41,7 @@ class AnunciosController extends Controller
                 'precio' => 'required|numeric|min:0',
                 'imagen_principal' => 'nullable|image|max:2048', // 2MB máximo
                 'user_id' => 'required|integer',
+                'direccion' => 'required|string',
             ]);
 
             // 2️⃣ Subir imagen (si existe)
@@ -120,7 +121,7 @@ class AnunciosController extends Controller
                 'titulo' => 'required|string|max:255',
                 'descripcion' => 'required|string',
                 'precio' => 'required|numeric|min:0',
-                
+                'direccion' => 'required|string',
             ]);
 
             // 2️⃣ Buscar anuncio existente
@@ -220,6 +221,20 @@ class AnunciosController extends Controller
     public function amenitiesid($id)
     {
         $resultado = AnunciosModel::amenitiesid($id);
+        return response()->json($resultado);
+    }
+
+
+    //PAGINA PRINCIPAL
+    public function listaranuncioprincipal($idpublish)
+    {
+        $resultado = AnunciosModel::listaranuncioprincipal($idpublish);
+        return response()->json($resultado);
+    }
+
+    public function listardetalleprincipal($idpublish)
+    {
+        $resultado = AnunciosModel::listardetalleprincipal($idpublish);
         return response()->json($resultado);
     }
 }

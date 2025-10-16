@@ -38,6 +38,7 @@ class AnunciosModel extends Model
             'precio' => $data['precio'],
             'imagen_principal' => $rutaImagen,
             'user_id' => $data['user_id'],
+            'direccion' => $data['direccion'],
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -166,6 +167,7 @@ class AnunciosModel extends Model
                 p.titulo, 
                 p.descripcion, 
                 p.precio, 
+                p.direccion, 
                 p.imagen_principal, 
                 p.is_active_publish 
             FROM propiedades p 
@@ -211,6 +213,7 @@ class AnunciosModel extends Model
                 'descripcion' => $data['descripcion'],
                 'precio' => $data['precio'],
                 'imagen_principal' => $rutaImagen,
+                'direccion' => $data['direccion'],
                 'updated_at' => now(),
             ]);
     }
@@ -238,5 +241,108 @@ class AnunciosModel extends Model
     }
 
 
+    //PAGINA PRINCIPAL
+    public static function listaranuncioprincipal($idpublish)
+    {
+        // Traer los anuncios base
+        $anuncios = DB::select("
+            SELECT 
+                p.id, 
+                u.id as id_ubicacion, 
+                u.nombre as ubicacion, 
+                tp.id as id_tipopropiedad, 
+                tp.nombre as tipo_propiedad, 
+                o.id as id_operacion, 
+                o.nombre as operaciones, 
+                p.titulo, 
+                p.descripcion, 
+                p.precio, 
+                p.direccion, 
+                p.imagen_principal, 
+                p.is_active_publish 
+            FROM propiedades p 
+            INNER JOIN ubicaciones u ON p.ubicacion_id = u.id 
+            INNER JOIN tipos_propiedad tp ON p.tipo_id = tp.id 
+            INNER JOIN operaciones o ON p.operacion_id = o.id 
+            WHERE p.is_active = 1 
+            AND p.is_active_publish = $idpublish 
+            ORDER BY p.id ASC
+        ");
+
+        // Para cada anuncio, traer sus características principales y secundarias
+        foreach ($anuncios as $anuncio) {
+            // Características principales
+            $anuncio->caracteristicas = DB::table('propiedad_caracteristicas as pc')
+                ->join('caracteristicas_catalogo as cc', 'pc.caracteristica_id', '=', 'cc.id')
+                ->select('cc.nombre', 'cc.icono', 'cc.unidad', 'pc.valor')
+                ->where('pc.propiedad_id', $anuncio->id)
+                ->get();
+
+            // Características secundarias (amenities)
+            $anuncio->amenities = DB::table('propiedad_amenities as pa')
+                ->join('amenities as ac', 'pa.amenity_id', '=', 'ac.id')
+                ->select('ac.nombre', 'ac.icon_url')
+                ->where('pa.propiedad_id', $anuncio->id)
+                ->get();
+        }
+
+
+        return $anuncios;
+    }
+
+
+    public static function listardetalleprincipal($idpublish)
+    {
+        // Traer los anuncios base
+        $anuncios = DB::select("
+            SELECT 
+                p.id, 
+                u.id as id_ubicacion, 
+                u.nombre as ubicacion, 
+                tp.id as id_tipopropiedad, 
+                tp.nombre as tipo_propiedad, 
+                o.id as id_operacion, 
+                o.nombre as operaciones, 
+                p.titulo, 
+                p.descripcion, 
+                p.precio, 
+                p.direccion, 
+                p.imagen_principal, 
+                p.is_active_publish 
+            FROM propiedades p 
+            INNER JOIN ubicaciones u ON p.ubicacion_id = u.id 
+            INNER JOIN tipos_propiedad tp ON p.tipo_id = tp.id 
+            INNER JOIN operaciones o ON p.operacion_id = o.id 
+            WHERE p.is_active = 1 
+            AND p.is_active_publish = $idpublish 
+            ORDER BY p.id ASC
+        ");
+
+        // Para cada anuncio, traer sus características principales y secundarias
+        foreach ($anuncios as $anuncio) {
+            // Características principales
+            $anuncio->caracteristicas = DB::table('propiedad_caracteristicas as pc')
+                ->join('caracteristicas_catalogo as cc', 'pc.caracteristica_id', '=', 'cc.id')
+                ->select('cc.nombre', 'cc.icono', 'cc.unidad', 'pc.valor')
+                ->where('pc.propiedad_id', $anuncio->id)
+                ->get();
+
+            // Características secundarias (amenities)
+            $anuncio->amenities = DB::table('propiedad_amenities as pa')
+                ->join('amenities as ac', 'pa.amenity_id', '=', 'ac.id')
+                ->select('ac.nombre', 'ac.icon_url')
+                ->where('pa.propiedad_id', $anuncio->id)
+                ->get();
+
+            $anuncio->imagenes = DB::table('imagenes_propiedades as imgp')
+                ->join('propiedades as p', 'imgp.propiedad_id', '=', 'p.id')
+                ->select('imgp.imagen')
+                ->where('imgp.propiedad_id', $anuncio->id)
+                ->get();
+        }
+
+        
+        return $anuncios;
+    }
 
 }

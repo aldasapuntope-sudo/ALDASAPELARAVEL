@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\UsuarioController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AnunciosController;
-
+use App\Http\Controllers\Api\PlanesController;
 
 Route::prefix('Loginform')->group(function () { 
     Route::post('/auth/google', [AuthController::class, 'loginform']); 
@@ -40,4 +40,15 @@ Route::prefix('misanuncios')->group(function () {
     Route::get('/caracteristicas-catalogo/{id}', [AnunciosController::class, 'categoriasCatalogoid']); 
     Route::get('/propiedad_amenities/{tpropiedad}', [AnunciosController::class, 'amenities']); 
     Route::get('/propiedad_amenities/{id}', [AnunciosController::class, 'amenitiesid']); 
+});
+
+Route::prefix('planes')->group(function () { 
+    Route::get('/listar', [PlanesController::class, 'listarPlanes']); 
+    Route::get('/usuario/{id}', [PlanesController::class, 'verificarPlanUsuario']); 
+});
+
+
+Route::prefix('paginaprincipal')->group(function () { 
+    Route::get('/listaranuncios/{is_publish}', [AnunciosController::class, 'listaranuncioprincipal']); 
+    Route::get('/listardetalle/{id}', [AnunciosController::class, 'listardetalleprincipal']); 
 });
