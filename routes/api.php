@@ -37,9 +37,9 @@ Route::prefix('misanuncios')->group(function () {
     Route::get('/listar/{is_publish}/{id}', [AnunciosController::class, 'listaranuncio']); 
     Route::put('/actualizar/{id}', [AnunciosController::class, 'actualizaranuncio']); 
     Route::get('/caracteristicas-catalogo/{tpropiedad}', [AnunciosController::class, 'categoriasCatalogo']); 
-    Route::get('/caracteristicas-catalogo/{id}', [AnunciosController::class, 'categoriasCatalogoid']); 
+    Route::get('/caracteristicas-catalogoid/{id}', [AnunciosController::class, 'categoriasCatalogoid']); 
     Route::get('/propiedad_amenities/{tpropiedad}', [AnunciosController::class, 'amenities']); 
-    Route::get('/propiedad_amenities/{id}', [AnunciosController::class, 'amenitiesid']); 
+    Route::get('/propiedad_amenitiesid/{id}', [AnunciosController::class, 'amenitiesid']); 
 });
 
 Route::prefix('planes')->group(function () { 
@@ -51,4 +51,8 @@ Route::prefix('planes')->group(function () {
 Route::prefix('paginaprincipal')->group(function () { 
     Route::get('/listaranuncios/{is_publish}', [AnunciosController::class, 'listaranuncioprincipal']); 
     Route::get('/listardetalle/{id}', [AnunciosController::class, 'listardetalleprincipal']); 
+    Route::get('/tipo-cambio', function () {
+        $data = file_get_contents('https://api.apis.net.pe/v1/tipo-cambio-sunat');
+        return response($data)->header('Content-Type', 'application/json');
+    });
 });

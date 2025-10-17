@@ -38,7 +38,7 @@ class AnunciosModel extends Model
             'precio' => $data['precio'],
             'imagen_principal' => $rutaImagen,
             'user_id' => $data['user_id'],
-            'direccion' => $data['direccion'],
+            
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -195,6 +195,47 @@ class AnunciosModel extends Model
                 ->select('ac.nombre', 'ac.icon_url')
                 ->where('pa.propiedad_id', $anuncio->id)
                 ->get();
+
+            $imagenPrincipal = collect();
+
+            if (!empty($anuncio->imagen_principal)) {
+                $imagenPrincipal->push((object)[
+                    'id' => 0,
+                    'titulo' => 'Imagen principal',
+                    'imagen' => $anuncio->imagen_principal,
+                ]);
+            }
+
+            // Otras imágenes
+            $imagenesSecundarias = DB::table('propiedad_imagenes as img')
+                ->select('img.id', 'img.titulo', 'img.imagen')
+                ->where('img.propiedad_id', $anuncio->id)
+                ->where('img.is_active', 1)
+                ->get();
+
+            // Unir principal + secundarias
+            $anuncio->imagenes = $imagenPrincipal->merge($imagenesSecundarias);
+
+            $anuncio->planos = DB::table('propiedad_planos as pp')
+                ->select('pp.id', 'pp.titulo', 'pp.imagen')
+                ->where('pp.propiedad_id', $anuncio->id)
+                ->where('pp.is_active', 1)
+                ->get()
+                ->map(function ($plano) {
+                    $plano->caracteristicas = DB::table('plano_caracteristicas as pc')
+                        ->select('pc.nombre', 'pc.valor', 'pc.icono')
+                        ->where('pc.plano_id', $plano->id)
+                        ->where('pc.is_active', 1)
+                        ->get();
+                    return $plano;
+                });
+
+            
+            $anuncio->videos = DB::table('propiedad_videos as pv')
+                ->select('pv.id', 'pv.titulo', 'pv.url', 'pv.tipo')
+                ->where('pv.propiedad_id', $anuncio->id)
+                ->where('pv.is_active', 1)
+                ->get();
         }
 
         return $anuncios;
@@ -308,13 +349,15 @@ class AnunciosModel extends Model
                 p.precio, 
                 p.direccion, 
                 p.imagen_principal, 
-                p.is_active_publish 
+                p.is_active_publish,
+                p.created_at
             FROM propiedades p 
             INNER JOIN ubicaciones u ON p.ubicacion_id = u.id 
             INNER JOIN tipos_propiedad tp ON p.tipo_id = tp.id 
             INNER JOIN operaciones o ON p.operacion_id = o.id 
             WHERE p.is_active = 1 
-            AND p.is_active_publish = $idpublish 
+            AND p.is_active_publish = 1
+            AND p.id = $idpublish 
             ORDER BY p.id ASC
         ");
 
@@ -332,12 +375,54 @@ class AnunciosModel extends Model
                 ->join('amenities as ac', 'pa.amenity_id', '=', 'ac.id')
                 ->select('ac.nombre', 'ac.icon_url')
                 ->where('pa.propiedad_id', $anuncio->id)
+                ->where('pa.is_active', 1)
                 ->get();
 
-            $anuncio->imagenes = DB::table('imagenes_propiedades as imgp')
-                ->join('propiedades as p', 'imgp.propiedad_id', '=', 'p.id')
-                ->select('imgp.imagen')
-                ->where('imgp.propiedad_id', $anuncio->id)
+            $imagenPrincipal = collect();
+
+            if (!empty($anuncio->imagen_principal)) {
+                $imagenPrincipal->push((object)[
+                    'id' => 0,
+                    'titulo' => 'Imagen principal',
+                    'imagen' => $anuncio->imagen_principal,
+                ]);
+            }
+
+            // Otras imágenes
+            $imagenesSecundarias = DB::table('propiedad_imagenes as img')
+                ->select('img.id', 'img.titulo', 'img.imagen')
+                ->where('img.propiedad_id', $anuncio->id)
+                ->where('img.is_active', 1)
+                ->get();
+
+            // Unir principal + secundarias
+            $anuncio->imagenes = $imagenPrincipal->merge($imagenesSecundarias);
+
+            $anuncio->planos = DB::table('propiedad_planos as pp')
+                ->select('pp.id', 'pp.titulo', 'pp.imagen')
+                ->where('pp.propiedad_id', $anuncio->id)
+                ->where('pp.is_active', 1)
+                ->get()
+                ->map(function ($plano) {
+                    $plano->caracteristicas = DB::table('plano_caracteristicas as pc')
+                        ->select('pc.nombre', 'pc.valor', 'pc.icono')
+                        ->where('pc.plano_id', $plano->id)
+                        ->where('pc.is_active', 1)
+                        ->get();
+                    return $plano;
+                });
+
+            
+            $anuncio->videos = DB::table('propiedad_videos as pv')
+                ->select('pv.id', 'pv.titulo', 'pv.url', 'pv.tipo')
+                ->where('pv.propiedad_id', $anuncio->id)
+                ->where('pv.is_active', 1)
+                ->get();
+
+            $anuncio->imagen360 = DB::table('propiedad_imagenes360 as pimg')
+                ->select('pimg.id', 'pimg.titulo', 'pimg.imagen')
+                ->where('pimg.propiedad_id', $anuncio->id)
+                ->where('pimg.is_active', 1)
                 ->get();
         }
 
