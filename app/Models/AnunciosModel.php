@@ -34,6 +34,7 @@ class AnunciosModel extends Model
             'operacion_id' => $data['operacion_id'],
             'ubicacion_id' => $data['ubicacion_id'],
             'titulo' => $data['titulo'],
+            'direccion' => $data['direccion'],
             'descripcion' => $data['descripcion'],
             'precio' => $data['precio'],
             'imagen_principal' => $rutaImagen,
@@ -177,7 +178,7 @@ class AnunciosModel extends Model
             WHERE p.is_active = 1 
             AND p.is_active_publish = $idpublish 
             AND p.user_id = $id 
-            ORDER BY p.id ASC
+            ORDER BY p.id DESC
         ");
 
         // Para cada anuncio, traer sus características principales y secundarias
@@ -255,6 +256,7 @@ class AnunciosModel extends Model
                 'precio' => $data['precio'],
                 'imagen_principal' => $rutaImagen,
                 'direccion' => $data['direccion'],
+                'is_active_publish' => 0,
                 'updated_at' => now(),
             ]);
     }

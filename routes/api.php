@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\UsuarioController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AnunciosController;
 use App\Http\Controllers\Api\PlanesController;
+use App\Http\Controllers\Api\AdministracionController;
 
 Route::prefix('Loginform')->group(function () { 
     Route::post('/auth/google', [AuthController::class, 'loginform']); 
@@ -55,4 +56,10 @@ Route::prefix('paginaprincipal')->group(function () {
         $data = file_get_contents('https://api.apis.net.pe/v1/tipo-cambio-sunat');
         return response($data)->header('Content-Type', 'application/json');
     });
+});
+
+
+Route::prefix('administracion')->group(function () { 
+
+    Route::get('/tipo-documento', [AdministracionController::class, 'ltipoDocumento']); 
 });

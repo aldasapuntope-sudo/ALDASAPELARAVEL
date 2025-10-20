@@ -31,7 +31,7 @@ class UsuarioModel extends Authenticatable
 
     public static function tipoUsuario()
     {
-        return DB::select("SELECT * FROM perfiles WHERE is_active = 1");
+        return DB::select("SELECT * FROM perfiles WHERE is_active = 1 AND id NOT IN ('1', '2')");
     }
 
     
@@ -92,7 +92,7 @@ class UsuarioModel extends Authenticatable
     public static function miperfil($codigo)
     {
        return DB::select(
-            "SELECT usu.id, p.id as tipoUsuario, p.nombre as perfil, usu.nombre, usu.apellido, usu.razon_social, usu.email, tpd.id as condicionFiscal, tpd.nombre as tipodocumento, usu.numero_documento as documento, usu.telefono, usu.telefono_movil as movil, usu.imagen FROM usuario usu inner join tipos_documento tpd on usu.tipo_documento_id = tpd.id inner join perfiles p on usu.perfil_id = p.id WHERE usu.id = ? ",
+            "SELECT usu.id, p.id as tipoUsuario, p.nombre as nombretusuario, p.nombre as perfil, usu.nombre, usu.apellido, usu.razon_social, usu.email, tpd.id as condicionFiscal, tpd.nombre as tipodocumento, usu.numero_documento as documento, usu.telefono, usu.telefono_movil as movil, usu.imagen FROM usuario usu inner join tipos_documento tpd on usu.tipo_documento_id = tpd.id inner join perfiles p on usu.perfil_id = p.id WHERE usu.id = ? ",
             [$codigo]
         );
     }

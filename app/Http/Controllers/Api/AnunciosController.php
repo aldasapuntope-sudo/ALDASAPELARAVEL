@@ -8,6 +8,9 @@ use App\Models\AnunciosModel;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+//use App\Helpers\BitacoraHelper;
+
 class AnunciosController extends Controller
 {
     public function tiposPropiedad()
@@ -29,6 +32,128 @@ class AnunciosController extends Controller
     }
 
     public function registraranuncio(Request $request)
+{
+    try {
+        // 1️⃣ Validar campos obligatorios
+        $validated = $request->validate([
+            'tipo_id' => 'required|integer',
+            'operacion_id' => 'required|integer',
+            'ubicacion_id' => 'required|integer',
+            'titulo' => 'required|string|max:255',
+            'descripcion' => 'required|string',
+            'precio' => 'required|numeric|min:0',
+            'imagen_principal' => 'nullable|image|max:2048', // 2MB máximo
+            'user_id' => 'required|integer',
+            'direccion' => 'required|string',
+        ]);
+
+        $userId = $request->user_id;
+
+        // 2️⃣ Verificar si el usuario tiene un plan activo
+        $plan = DB::table('usuarios_planes')
+            ->where('user_id', $userId)
+            ->where('is_active', 1)
+            ->first();
+
+        if (!$plan) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'No tienes un plan activo para publicar anuncios.',
+            ], 403);
+        }
+
+        // 3️⃣ Verificar si no ha vencido el plan
+        if (Carbon::now()->gt(Carbon::parse($plan->fecha_fin))) {
+            // Actualiza el estado del plan a vencido
+            DB::table('usuarios_planes')
+                ->where('id', $plan->id)
+                ->update(['estado' => 'vencido', 'is_active' => 0]);
+
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Tu plan ha vencido. Renueva tu suscripción para continuar publicando.',
+            ], 403);
+        }
+
+        // 4️⃣ Contar cuántos anuncios ya ha publicado este usuario
+        $totalAnuncios = DB::table('propiedades')
+            ->where('user_id', $userId)
+            ->where('is_active', 1)
+            ->count();
+
+        // 5️⃣ Validar si ya alcanzó el límite
+        if ($totalAnuncios >= $plan->anuncios_disponibles) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Has alcanzado el límite de anuncios disponibles en tu plan.',
+            ], 403);
+        }
+
+        // 6️⃣ Subir imagen (si existe)
+        $rutaImagen = null;
+        if ($request->hasFile('imagen_principal')) {
+            $archivo = $request->file('imagen_principal');
+            $nombre = 'propiedad_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+
+            $directorioEscritorio = 'C:/xampp/htdocs/propiedades';
+            if (!file_exists($directorioEscritorio)) {
+                mkdir($directorioEscritorio, 0777, true);
+            }
+
+            $archivo->move($directorioEscritorio, $nombre);
+            $rutaImagen = 'http://localhost/propiedades/' . $nombre;
+        }
+
+        // 7️⃣ Crear el anuncio principal (propiedad)
+        $idPropiedad = AnunciosModel::crearAnuncio($validated, $rutaImagen);
+       /* BitacoraHelper::registrar(
+            'INSERT',
+            'propiedades',
+            $idPropiedad,
+            'Se registró un nuevo anuncio con título: ' . $request->titulo
+        );*/
+
+        // 8️⃣ Guardar características (si existen)
+        if ($request->has('caracteristicas')) {
+            $caracteristicas = json_decode($request->caracteristicas, true);
+
+            if (is_array($caracteristicas) && count($caracteristicas) > 0) {
+                AnunciosModel::guardarCaracteristicas($idPropiedad, $caracteristicas);
+            }
+        }
+
+        if ($request->has('caracteristicas_secundarias')) {
+            $caracteristicas_secundarias = json_decode($request->caracteristicas_secundarias, true);
+
+            if (is_array($caracteristicas_secundarias) && count($caracteristicas_secundarias) > 0) {
+                AnunciosModel::guardarCaracteristicassecundarias($idPropiedad, $caracteristicas_secundarias);
+            }
+        }
+
+        // 9️⃣ Respuesta exitosa
+        return response()->json([
+            'estado' => 1,
+            'mensaje' => 'Anuncio registrado correctamente.',
+            'id' => $idPropiedad,
+        ], 201);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'estado' => 0,
+            'mensaje' => 'Error de validación.',
+            'errores' => $e->errors(),
+        ], 422);
+    } catch (\Exception $e) {
+        return response()->json([
+            'estado' => 0,
+            'mensaje' => 'Error interno del servidor.',
+            'detalle' => $e->getMessage(),
+            'linea' => $e->getLine(),
+        ], 500);
+    }
+}
+
+    /*public function registraranuncio(Request $request)
     {
         try {
             // 1️⃣ Validar campos obligatorios
@@ -101,7 +226,7 @@ class AnunciosController extends Controller
                 'linea' => $e->getLine(),
             ], 500);
         }
-    }
+    }*/
 
 
     public function listaranuncio($idpublish, $id)

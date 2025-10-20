@@ -22,6 +22,7 @@ class PlanesModel extends Model
         $plan = DB::table('usuarios_planes')
             ->join('planes', 'usuarios_planes.plan_id', '=', 'planes.id')
             ->select(
+                
                 'planes.nombre',
                 'planes.descripcion',
                 'planes.precio',
