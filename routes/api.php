@@ -61,5 +61,29 @@ Route::prefix('paginaprincipal')->group(function () {
 
 Route::prefix('administracion')->group(function () { 
 
-    Route::get('/tipo-documento', [AdministracionController::class, 'ltipoDocumento']); 
+    //RUTA DE PLANES
+    Route::get('/lplanes', [AdministracionController::class, 'listarPlanes']); 
+    Route::put('/aplanes/{id}', [AdministracionController::class, 'actualizarPlanes']); 
+    Route::post('/rplanes', [AdministracionController::class, 'registrarPlanes']); 
+    Route::put('/eplanes/{id}/estado', [AdministracionController::class, 'cambiarEstadoPlan']); 
+
+    //RUTA CURD DE TIPO DE DOCUMENTO
+    Route::get('/ltipodocumento', [AdministracionController::class, 'ltipoDocumento']); 
+    Route::put('/atipodocumento/{id}', [AdministracionController::class, 'actualizarTipoDocumento']); 
+    Route::post('/rtipodocumento', [AdministracionController::class, 'registrarTipoDocumento']); 
+    Route::put('/etipodocumento/{id}/estado', [AdministracionController::class, 'cambiarEstadoTipoDocumento']); 
+
+    // Amenidades
+    Route::get('/lamenities', [AdministracionController::class, 'listarAmenities']);
+    Route::post('/ramenities', [AdministracionController::class, 'registrarAmenity']);
+    Route::put('/aamenities/{id}', [AdministracionController::class, 'actualizarAmenity']);
+    Route::put('/eamenities/{id}/estado', [AdministracionController::class, 'cambiarEstadoAmenity']);
+
+    // Características catálogo
+    Route::get('/lcaracteristicas', [AdministracionController::class, 'listarCaracteristicasCatalogo']);
+    Route::post('/rcaracteristica', [AdministracionController::class, 'registrarCaracteristicaCatalogo']);
+    Route::put('/acaracteristica/{id}', [AdministracionController::class, 'actualizarCaracteristicaCatalogo']);
+    Route::put('/ecaracteristica/{id}/estado', [AdministracionController::class, 'cambiarEstadoCaracteristicaCatalogo']);
+    Route::get('/tipos-propiedad', [AdministracionController::class, 'tiposPropiedad']);
+ 
 });
