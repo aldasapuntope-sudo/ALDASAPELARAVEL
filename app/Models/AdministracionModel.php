@@ -171,5 +171,62 @@ class AdministracionModel extends Model
             ]);
     }
 
+    //CRUD MODULO OPERACIONES
+    public static function listarOperaciones()
+    {
+        return DB::select('SELECT * FROM operaciones');
+    }
+
+    // Registrar operación
+    public static function registrarOperacion($data)
+    {
+        return DB::table('operaciones')->insertGetId([
+            'nombre' => $data['nombre'],
+            'is_active' => $data['is_active'] ?? 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    // Actualizar operación
+    public static function actualizarOperacion($id, $data)
+    {
+        DB::table('operaciones')
+            ->where('id', $id)
+            ->update([
+                'nombre' => $data['nombre'],
+                'is_active' => $data['is_active'] ?? 1,
+                'updated_at' => now(),
+            ]);
+    }
+
+
+    //CRUD MODULO TIPO PROPIEDAD
+    public static function listarTiposPropiedad()
+    {
+        return DB::select('SELECT * FROM tipos_propiedad');
+    }
+
+   
+    public static function registrarTipoPropiedad($data)
+    {
+        return DB::table('tipos_propiedad')->insertGetId([
+            'nombre' => $data['nombre'],
+            'is_active' => $data['is_active'] ?? 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    public static function actualizarTipoPropiedad($id, $data)
+    {
+        DB::table('tipos_propiedad')
+            ->where('id', $id)
+            ->update([
+                'nombre' => $data['nombre'],
+                'is_active' => $data['is_active'] ?? 1,
+                'updated_at' => now(),
+            ]);
+    }
 
 }

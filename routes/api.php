@@ -85,5 +85,16 @@ Route::prefix('administracion')->group(function () {
     Route::put('/acaracteristica/{id}', [AdministracionController::class, 'actualizarCaracteristicaCatalogo']);
     Route::put('/ecaracteristica/{id}/estado', [AdministracionController::class, 'cambiarEstadoCaracteristicaCatalogo']);
     Route::get('/tipos-propiedad', [AdministracionController::class, 'tiposPropiedad']);
- 
+    
+    //RUTAS CRUD OPERACIONES
+    Route::get('/loperaciones', [AdministracionController::class, 'listarOperaciones']); // Listar todas las operaciones
+    Route::post('/roperaciones', [AdministracionController::class, 'registrarOperacion']); // Crear nueva operación
+    Route::put('/aoperaciones/{id}', [AdministracionController::class, 'actualizarOperacion']); // Actualizar operación existente
+    Route::put('/eoperaciones/{id}/estado', [AdministracionController::class, 'cambiarEstadoOperacion']); // Activar/Inactivar operación
+
+    //RUTAS CRUD TIPO PROPIEDAD
+    Route::get('/ltipospropiedad', [AdministracionController::class, 'listarTiposPropiedad']); // Listar todos los tipos de propiedad
+    Route::post('/rtipospropiedad', [AdministracionController::class, 'registrarTipoPropiedad']); // Crear tipo de propiedad
+    Route::put('/atipospropiedad/{id}', [AdministracionController::class, 'actualizarTipoPropiedad']); // Actualizar tipo de propiedad
+    Route::put('/etipospropiedad/{id}/estado', [AdministracionController::class, 'cambiarEstadoTipoPropiedad']); // Activar/Inactivar tipo de propiedad
 });
