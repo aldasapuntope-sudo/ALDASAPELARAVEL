@@ -31,6 +31,8 @@ Route::prefix('miperfil')->group(function () {
 });
 
 Route::prefix('misanuncios')->group(function () {
+    Route::get('/lplanos/{id}', [AnunciosController::class, 'listarplanos']); 
+    Route::delete('/eplanos/{id}', [AnunciosController::class, 'eliminarplanos']);
     Route::get('/tipos-propiedad', [AnunciosController::class, 'tiposPropiedad']); 
     Route::get('/tipos-operacion', [AnunciosController::class, 'tiposOperacion']); 
     Route::get('/tipos-ubicaciones', [AnunciosController::class, 'tiposUbicaciones']); 

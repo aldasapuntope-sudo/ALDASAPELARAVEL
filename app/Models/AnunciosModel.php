@@ -9,9 +9,25 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class AnunciosModel extends Model
 {
+
+    
+
+    public static function listarplanos($id)
+    {
+        return DB::select("SELECT * FROM propiedad_planos WHERE propiedad_id= $id AND is_active = 1 ORDER BY id ASC");
+    }
+
+
+    public static function eliminarplanos($id)
+    {
+        return DB::update("UPDATE propiedad_planos SET is_active = 0 WHERE id = ?", [$id]);
+    }
+    
+
     public static function tiposPropiedad()
     {
         return DB::select("SELECT * FROM tipos_propiedad WHERE is_active = 1 ORDER BY nombre ASC");
@@ -44,6 +60,19 @@ class AnunciosModel extends Model
             'updated_at' => now(),
         ]);
     }
+
+    public static function guardarPlanos($id, $titulo, $nombrePlano)
+    {
+        return DB::table('propiedad_planos')->insert([
+                            'propiedad_id' => $id,
+                            'titulo' => $titulo,
+                            'imagen' => 'planos/' . $nombrePlano,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+    }
+
+
 
     public static function guardarCaracteristicas($propiedadId, $caracteristicas)
     {

@@ -13,6 +13,27 @@ use Carbon\Carbon;
 
 class AnunciosController extends Controller
 {
+
+    
+
+    public function listarplanos($id)
+    {
+        $resultado = AnunciosModel::listarplanos($id);
+        return response()->json($resultado);
+    }
+
+    public function eliminarplanos($id)
+    {
+        $resultado = AnunciosModel::eliminarplanos($id);
+        
+        if ($resultado > 0) {
+            return response()->json(['success' => true, 'message' => 'Plano eliminado correctamente']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'No se pudo eliminar el plano']);
+        }
+    }
+    
+
     public function tiposPropiedad()
     {
         $resultado = AnunciosModel::tiposPropiedad();
@@ -32,126 +53,139 @@ class AnunciosController extends Controller
     }
 
     public function registraranuncio(Request $request)
-{
-    try {
-        // 1️⃣ Validar campos obligatorios
-        $validated = $request->validate([
-            'tipo_id' => 'required|integer',
-            'operacion_id' => 'required|integer',
-            'ubicacion_id' => 'required|integer',
-            'titulo' => 'required|string|max:255',
-            'descripcion' => 'required|string',
-            'precio' => 'required|numeric|min:0',
-            'imagen_principal' => 'nullable|image|max:2048', // 2MB máximo
-            'user_id' => 'required|integer',
-            'direccion' => 'required|string',
-        ]);
+    {
+        try {
+            // 1️⃣ Validar campos obligatorios
+            $validated = $request->validate([
+                'tipo_id' => 'required|integer',
+                'operacion_id' => 'required|integer',
+                'ubicacion_id' => 'required|integer',
+                'titulo' => 'required|string|max:255',
+                'descripcion' => 'required|string',
+                'precio' => 'required|numeric|min:0',
+                'imagen_principal' => 'nullable|image',
+                'user_id' => 'required|integer',
+                'direccion' => 'required|string',
+            ]);
 
-        $userId = $request->user_id;
+            $userId = $request->user_id;
 
-        // 2️⃣ Verificar si el usuario tiene un plan activo
-        $plan = DB::table('usuarios_planes')
-            ->where('user_id', $userId)
-            ->where('is_active', 1)
-            ->first();
+            // 2️⃣ Verificar plan activo
+            $plan = DB::table('usuarios_planes')
+                ->where('user_id', $userId)
+                ->where('is_active', 1)
+                ->first();
 
-        if (!$plan) {
-            return response()->json([
-                'estado' => 0,
-                'mensaje' => 'No tienes un plan activo para publicar anuncios.',
-            ], 403);
-        }
-
-        // 3️⃣ Verificar si no ha vencido el plan
-        if (Carbon::now()->gt(Carbon::parse($plan->fecha_fin))) {
-            // Actualiza el estado del plan a vencido
-            DB::table('usuarios_planes')
-                ->where('id', $plan->id)
-                ->update(['estado' => 'vencido', 'is_active' => 0]);
-
-            return response()->json([
-                'estado' => 0,
-                'mensaje' => 'Tu plan ha vencido. Renueva tu suscripción para continuar publicando.',
-            ], 403);
-        }
-
-        // 4️⃣ Contar cuántos anuncios ya ha publicado este usuario
-        $totalAnuncios = DB::table('propiedades')
-            ->where('user_id', $userId)
-            ->where('is_active', 1)
-            ->count();
-
-        // 5️⃣ Validar si ya alcanzó el límite
-        if ($totalAnuncios >= $plan->anuncios_disponibles) {
-            return response()->json([
-                'estado' => 0,
-                'mensaje' => 'Has alcanzado el límite de anuncios disponibles en tu plan.',
-            ], 403);
-        }
-
-        // 6️⃣ Subir imagen (si existe)
-        $rutaImagen = null;
-        if ($request->hasFile('imagen_principal')) {
-            $archivo = $request->file('imagen_principal');
-            $nombre = 'propiedad_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
-
-            $directorioEscritorio = 'C:/xampp/htdocs/propiedades';
-            if (!file_exists($directorioEscritorio)) {
-                mkdir($directorioEscritorio, 0777, true);
+            if (!$plan) {
+                return response()->json([
+                    'estado' => 0,
+                    'mensaje' => 'No tienes un plan activo para publicar anuncios.',
+                ], 403);
             }
 
-            $archivo->move($directorioEscritorio, $nombre);
-            $rutaImagen = 'http://localhost/propiedades/' . $nombre;
-        }
+            // 3️⃣ Verificar vencimiento del plan
+            if (Carbon::now()->gt(Carbon::parse($plan->fecha_fin))) {
+                DB::table('usuarios_planes')
+                    ->where('id', $plan->id)
+                    ->update(['estado' => 'vencido', 'is_active' => 0]);
 
-        // 7️⃣ Crear el anuncio principal (propiedad)
-        $idPropiedad = AnunciosModel::crearAnuncio($validated, $rutaImagen);
-       /* BitacoraHelper::registrar(
-            'INSERT',
-            'propiedades',
-            $idPropiedad,
-            'Se registró un nuevo anuncio con título: ' . $request->titulo
-        );*/
-
-        // 8️⃣ Guardar características (si existen)
-        if ($request->has('caracteristicas')) {
-            $caracteristicas = json_decode($request->caracteristicas, true);
-
-            if (is_array($caracteristicas) && count($caracteristicas) > 0) {
-                AnunciosModel::guardarCaracteristicas($idPropiedad, $caracteristicas);
+                return response()->json([
+                    'estado' => 0,
+                    'mensaje' => 'Tu plan ha vencido. Renueva tu suscripción para continuar publicando.',
+                ], 403);
             }
-        }
 
-        if ($request->has('caracteristicas_secundarias')) {
-            $caracteristicas_secundarias = json_decode($request->caracteristicas_secundarias, true);
+            // 4️⃣ Contar anuncios existentes
+            $totalAnuncios = DB::table('propiedades')
+                ->where('user_id', $userId)
+                ->where('is_active', 1)
+                ->count();
 
-            if (is_array($caracteristicas_secundarias) && count($caracteristicas_secundarias) > 0) {
-                AnunciosModel::guardarCaracteristicassecundarias($idPropiedad, $caracteristicas_secundarias);
+            if ($totalAnuncios >= $plan->anuncios_disponibles) {
+                return response()->json([
+                    'estado' => 0,
+                    'mensaje' => 'Has alcanzado el límite de anuncios disponibles en tu plan.',
+                ], 403);
             }
+
+            // 5️⃣ Subir imagen principal
+            $rutaImagen = null;
+            if ($request->hasFile('imagen_principal')) {
+                $archivo = $request->file('imagen_principal');
+                $nombre = 'propiedad_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+
+                $directorioPropiedades = 'C:/xampp/htdocs/propiedades';
+                if (!file_exists($directorioPropiedades)) {
+                    mkdir($directorioPropiedades, 0777, true);
+                }
+
+                $archivo->move($directorioPropiedades, $nombre);
+                $rutaImagen = 'http://localhost/propiedades/' . $nombre;
+            }
+
+            // 6️⃣ Crear anuncio principal
+            $idPropiedad = AnunciosModel::crearAnuncio($validated, $rutaImagen);
+
+            // 7️⃣ Guardar características
+            if ($request->has('caracteristicas')) {
+                $caracteristicas = json_decode($request->caracteristicas, true);
+                if (is_array($caracteristicas) && count($caracteristicas) > 0) {
+                    AnunciosModel::guardarCaracteristicas($idPropiedad, $caracteristicas);
+                }
+            }
+
+            if ($request->has('caracteristicas_secundarias')) {
+                $caracteristicas_secundarias = json_decode($request->caracteristicas_secundarias, true);
+                if (is_array($caracteristicas_secundarias) && count($caracteristicas_secundarias) > 0) {
+                    AnunciosModel::guardarCaracteristicassecundarias($idPropiedad, $caracteristicas_secundarias);
+                }
+            }
+
+            // 8️⃣ Subir y guardar planos
+            if ($request->has('planos')) {
+                $planosData = $request->planos; // array con ['archivo', 'titulo']
+
+                foreach ($planosData as $plano) {
+                    if (isset($plano['archivo'])) {
+                        $archivo = $plano['archivo'];
+                        $titulo = $plano['titulo'] ?? '';
+
+                        $directorioPlanos = 'C:/xampp/htdocs/planos';
+                        if (!file_exists($directorioPlanos)) mkdir($directorioPlanos, 0777, true);
+
+                        $nombrePlano = 'plano_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+                        $archivo->move($directorioPlanos, $nombrePlano);
+
+                        AnunciosModel::guardarPlanos($idPropiedad, $titulo, $nombrePlano);
+                    }
+                }
+            }
+
+            // 9️⃣ Respuesta exitosa
+            return response()->json([
+                'estado' => 1,
+                'mensaje' => 'Anuncio registrado correctamente.',
+                'id' => $idPropiedad,
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Error de validación.',
+                'errores' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Error interno del servidor.',
+                'detalle' => $e->getMessage(),
+                'linea' => $e->getLine(),
+            ], 500);
         }
-
-        // 9️⃣ Respuesta exitosa
-        return response()->json([
-            'estado' => 1,
-            'mensaje' => 'Anuncio registrado correctamente.',
-            'id' => $idPropiedad,
-        ], 201);
-
-    } catch (\Illuminate\Validation\ValidationException $e) {
-        return response()->json([
-            'estado' => 0,
-            'mensaje' => 'Error de validación.',
-            'errores' => $e->errors(),
-        ], 422);
-    } catch (\Exception $e) {
-        return response()->json([
-            'estado' => 0,
-            'mensaje' => 'Error interno del servidor.',
-            'detalle' => $e->getMessage(),
-            'linea' => $e->getLine(),
-        ], 500);
     }
-}
+
+
+
 
     /*public function registraranuncio(Request $request)
     {
@@ -301,6 +335,37 @@ class AnunciosController extends Controller
                 }
             }
 
+            // 7️⃣ Actualizar planos (nuevos)
+           if ($request->has('planos')) {
+                $planosData = $request->planos; // array con ['archivo', 'titulo'] por cada índice
+
+                // Eliminar planos anteriores si quieres reemplazarlos
+                //DB::table('propiedad_planos')->where('propiedad_id', $id)->delete();
+
+                foreach ($planosData as $plano) {
+                    if (isset($plano['archivo'])) {
+                        $archivo = $plano['archivo']; // esto ya es un UploadedFile
+                        $titulo = $plano['titulo'] ?? '';
+
+                        $directorioPlanos = 'C:/xampp/htdocs/planos';
+                        if (!file_exists($directorioPlanos)) mkdir($directorioPlanos, 0777, true);
+
+                        $nombrePlano = 'plano_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+                        $archivo->move($directorioPlanos, $nombrePlano);
+
+                        AnunciosModel::guardarPlanos($id, $titulo, $nombrePlano);
+                        /*DB::table('propiedad_planos')->insert([
+                            'propiedad_id' => $id,
+                            'titulo' => $titulo,
+                            'imagen' => 'planos/' . $nombrePlano,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);*/
+                    }
+                }
+            }
+
+
             // 6️⃣ Respuesta exitosa
             return response()->json([
                 'estado' => 1,
@@ -323,6 +388,7 @@ class AnunciosController extends Controller
             ], 500);
         }
     }
+
 
 
     public function categoriasCatalogo($tpropiedad)
