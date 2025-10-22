@@ -102,7 +102,7 @@ class AuthController extends Controller
                 'nombre' => $givenName ?? $name,
                 'apellido' => $familyName ?? '',
                 'email' => $email,
-                'tipoUsuario' => '1',         // Usuario normal
+                'tipoUsuario' => '3',         // Usuario normal
                 'condicionFiscal' => '1',     // DNI
                 'documento' => '',
                 'password' => uniqid(),     // Genera una contraseña temporal
