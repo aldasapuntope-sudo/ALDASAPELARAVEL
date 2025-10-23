@@ -14,7 +14,48 @@ use Illuminate\Support\Str;
 class AnunciosModel extends Model
 {
 
-    
+    protected $table = 'propiedades'; // 👈 Aquí le indicas a qué tabla apunta
+    protected $fillable = [
+        'user_id',
+        'tipo_id',
+        'operacion_id',
+        'ubicacion_id',
+        'titulo',
+        'direccion',
+        'descripcion',
+        'precio',
+        'dormitorios',
+        'banos',
+        'area',
+        'imagen_principal',
+        'is_active_publish',
+        'visitas',
+        'is_active',
+    ];
+
+    public static function sumarVisita($id)
+    {
+        $propiedad = self::find($id);
+
+        if (!$propiedad) {
+            return [
+                'success' => false,
+                'message' => 'Propiedad no encontrada'
+            ];
+        }
+
+        // Incrementa directamente en la tabla 'propiedades'
+        $propiedad->increment('visitas');
+
+        // Recargar el modelo para obtener el valor actualizado
+        $propiedad->refresh();
+
+        return [
+            'success' => true,
+            'message' => 'Visita registrada correctamente',
+            'visitas' => $propiedad->visitas
+        ];
+    }
 
     public static function listarplanos($id)
     {
@@ -381,6 +422,7 @@ class AnunciosModel extends Model
                 p.direccion, 
                 p.imagen_principal, 
                 p.is_active_publish,
+                p.visitas,
                 p.created_at
             FROM propiedades p 
             INNER JOIN ubicaciones u ON p.ubicacion_id = u.id 
@@ -394,6 +436,21 @@ class AnunciosModel extends Model
 
         // Para cada anuncio, traer sus características principales y secundarias
         foreach ($anuncios as $anuncio) {
+
+            $perfil = DB::table('usuario as usu')
+                ->join('propiedades as p', 'p.user_id', '=', 'usu.id')
+                ->select('usu.id', 'usu.nombre', 'usu.apellido', 'usu.email', 'usu.telefono', 'usu.telefono_movil', 'usu.imagen')
+                ->where('p.id', $anuncio->id)
+                ->where('p.is_active', 1)
+                ->first();
+
+            if ($perfil) {
+                $perfil->idanunciante = $perfil->id;
+                unset($perfil->id); // opcional: ocultar el ID real
+            }
+
+            $anuncio->perfilanunciante = $perfil;
+
             // Características principales
             $anuncio->caracteristicas = DB::table('propiedad_caracteristicas as pc')
                 ->join('caracteristicas_catalogo as cc', 'pc.caracteristica_id', '=', 'cc.id')
@@ -461,4 +518,23 @@ class AnunciosModel extends Model
         return $anuncios;
     }
 
+    //PARTE DE MENSAES DE LA PAGINA PRINCIPAL DETALLE AL ANUNCIANTE
+    public static function guardarMensaje($nombre, $email, $telefono, $dni, $mensaje, $anuncio_id)
+    {
+        $data = [
+            'nombre' => $nombre,
+            'email' => $email,
+            'mensaje' => $mensaje,
+            'telefono' => $telefono,
+            'dni' => $dni,
+            'anuncio_id' => $anuncio_id,
+            'is_active' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+
+        DB::table('mensajes_contacto')->insert($data);
+
+        return $data;
+    }
 }

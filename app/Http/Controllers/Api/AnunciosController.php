@@ -15,6 +15,11 @@ class AnunciosController extends Controller
 {
 
     
+    public function sumarVisita($id)
+    {
+        $resultado = AnunciosModel::sumarVisita($id);
+        return response()->json($resultado);
+    }
 
     public function listarplanos($id)
     {
@@ -428,4 +433,142 @@ class AnunciosController extends Controller
         $resultado = AnunciosModel::listardetalleprincipal($idpublish);
         return response()->json($resultado);
     }
+
+
+
+    //PARTE DE MENSAES DE LA PAGINA PRINCIPAL DETALLE AL ANUNCIANTE
+    public function registrarmensajeanunciante(Request $request)
+    {
+        try {
+            // Validación directa (lanza excepción si falla)
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:255',
+                'email' => 'required|email|max:255',
+                'telefono' => 'required|string|max:10',
+                'dni' => 'required|string|max:10',
+                'mensaje' => 'required|string',
+                'anuncioid' => 'required|integer',
+                
+            ]);
+
+            // Crear mensaje
+            $mensaje = AnunciosModel::guardarMensaje(
+                $validated['nombre'],
+                $validated['email'],
+                $validated['telefono'],
+                $validated['dni'],
+                $validated['mensaje'],
+                $validated['anuncioid']
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Mensaje enviado correctamente',
+                'data' => $mensaje
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Si la validación falla, devuelve errores JSON
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            // Cualquier otro error
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al registrar el mensaje',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    //FILTROS PAGINA PRINCIPAL
+    public function getRelacionadas($tipo_id, $idActual)
+    {
+        $relacionadas = AnunciosModel::where('tipo_id', $tipo_id)
+            ->where('id', '!=', $idActual) // Excluye la actual
+            ->where('is_active_publish', 1)
+            ->where('is_active', 1)
+            ->orderBy('visitas', 'desc') // 👈 Ordenar por más visitas
+            ->limit(4)
+            ->get(['id', 'titulo', 'precio', 'imagen_principal', 'direccion', 'operacion_id', 'visitas']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $relacionadas
+        ]);
+    }
+
+    public function buscar(Request $request)
+    {
+        $query = AnunciosModel::query()
+            ->where('is_active_publish', 1)
+            ->where('is_active', 1);
+
+        if ($request->filled('tipo')) {
+            $query->where('tipo_id', $request->tipo);
+        }
+
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->where(function ($sub) use ($q) {
+                $sub->where('titulo', 'like', "%$q%")
+                    ->orWhere('direccion', 'like', "%$q%");
+            });
+        }
+
+        if ($request->filled('mode')) {
+            if ($request->mode === 'comprar') {
+                $query->where('operacion_id', 1);
+            } elseif ($request->mode === 'alquilar') {
+                $query->where('operacion_id', 2);
+            }
+        }
+
+        $resultados = $query
+            ->select('id', 'titulo', 'precio', 'imagen_principal', 'direccion', 'operacion_id')
+            ->orderBy('created_at', 'desc')
+            ->paginate(12);
+
+        return response()->json(['success' => true, 'data' => $resultados]);
+    }
+
+    public function buscarPropiedad(Request $request)
+    {
+        $q = $request->query('q');
+        $tipo = $request->query('tipo');
+
+        $query = AnunciosModel::query()
+            ->where('is_active_publish', 1)
+            ->where('is_active', 1);
+
+        if ($tipo) {
+            $query->where('tipo_id', $tipo);
+        }
+
+        if ($q) {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('titulo', 'like', "%{$q}%")
+                    ->orWhere('direccion', 'like', "%{$q}%")
+                    ->orWhere('descripcion', 'like', "%{$q}%");
+            });
+        }
+
+        $resultados = $query
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get(['id', 'titulo', 'direccion', 'imagen_principal']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $resultados
+        ]);
+    }
+
+
+
+
+
 }

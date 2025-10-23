@@ -52,12 +52,20 @@ Route::prefix('planes')->group(function () {
 
 
 Route::prefix('paginaprincipal')->group(function () { 
+    Route::get('/tipos-propiedad', [AnunciosController::class, 'tiposPropiedad']);
+    Route::get('/propiedades/buscar', [AnunciosController::class, 'buscarpropiedad']);
+    Route::post('/propiedades/visita/{id}', [AnunciosController::class, 'sumarVisita']);
     Route::get('/listaranuncios/{is_publish}', [AnunciosController::class, 'listaranuncioprincipal']); 
     Route::get('/listardetalle/{id}', [AnunciosController::class, 'listardetalleprincipal']); 
     Route::get('/tipo-cambio', function () {
         $data = file_get_contents('https://api.apis.net.pe/v1/tipo-cambio-sunat');
         return response($data)->header('Content-Type', 'application/json');
     });
+
+    Route::post('/rmensajeanunciante', [AnunciosController::class, 'registrarmensajeanunciante']); 
+
+    //FILTROS DE PAGINA PRINCIPAL
+    Route::get('/propiedades/relacionadas/{tipo_id}/{id}', [AnunciosController::class, 'getRelacionadas']);
 });
 
 
