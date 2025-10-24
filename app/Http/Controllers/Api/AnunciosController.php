@@ -540,32 +540,133 @@ class AnunciosController extends Controller
         $q = $request->query('q');
         $tipo = $request->query('tipo');
 
-        $query = AnunciosModel::query()
-            ->where('is_active_publish', 1)
-            ->where('is_active', 1);
+        $query = DB::table('propiedades as p')
+            ->join('ubicaciones as u', 'p.ubicacion_id', '=', 'u.id')
+            ->join('tipos_propiedad as tp', 'p.tipo_id', '=', 'tp.id')
+            ->join('operaciones as o', 'p.operacion_id', '=', 'o.id')
+            ->select(
+                'p.id', 
+                'u.id as id_ubicacion', 
+                'u.nombre as ubicacion', 
+                'tp.id as id_tipopropiedad', 
+                'tp.nombre as tipo_propiedad', 
+                'o.id as id_operacion', 
+                'o.nombre as operaciones', 
+                'p.titulo', 
+                'p.descripcion', 
+                'p.precio', 
+                'p.direccion', 
+                'p.imagen_principal', 
+                'p.is_active_publish',
+                'p.visitas',
+                'p.created_at'
+            )
+            ->where('p.is_active', 1)
+            ->where('p.is_active_publish', 1);
 
         if ($tipo) {
-            $query->where('tipo_id', $tipo);
+            $query->where('p.tipo_id', $tipo);
         }
 
         if ($q) {
-            $query->where(function ($sub) use ($q) {
-                $sub->where('titulo', 'like', "%{$q}%")
-                    ->orWhere('direccion', 'like', "%{$q}%")
-                    ->orWhere('descripcion', 'like', "%{$q}%");
+            $query->where(function($sub) use ($q) {
+                $sub->where('p.titulo', 'like', "%{$q}%")
+                    ->orWhere('p.direccion', 'like', "%{$q}%")
+                    ->orWhere('p.descripcion', 'like', "%{$q}%")
+                    ->orWhere('tp.nombre', 'like', "%{$q}%") // 🔍 tipo de propiedad (Casa, Departamento, etc.)
+                    ->orWhere('u.nombre', 'like', "%{$q}%"); // 📍 ubicación (Chiclayo, Lambayeque, etc.)
             });
+            /*$query->where(function($sub) use ($q) {
+                $sub->where('p.titulo', 'like', "%{$q}%")
+                    ->orWhere('p.direccion', 'like', "%{$q}%")
+                    ->orWhere('p.descripcion', 'like', "%{$q}%");
+            });*/
         }
 
-        $resultados = $query
-            ->orderBy('created_at', 'desc')
+        $anuncios = $query->orderBy('p.created_at', 'desc')
             ->limit(10)
-            ->get(['id', 'titulo', 'direccion', 'imagen_principal']);
+            ->get();
+
+        // Agregamos todos los detalles como en listardetalleprincipal
+        foreach ($anuncios as $anuncio) {
+
+            $perfil = DB::table('usuario as usu')
+                ->join('propiedades as p', 'p.user_id', '=', 'usu.id')
+                ->select('usu.id', 'usu.nombre', 'usu.apellido', 'usu.email', 'usu.telefono', 'usu.telefono_movil', 'usu.imagen')
+                ->where('p.id', $anuncio->id)
+                ->where('p.is_active', 1)
+                ->first();
+
+            if ($perfil) {
+                $perfil->idanunciante = $perfil->id;
+                unset($perfil->id);
+            }
+
+            $anuncio->perfilanunciante = $perfil;
+
+            $anuncio->caracteristicas = DB::table('propiedad_caracteristicas as pc')
+                ->join('caracteristicas_catalogo as cc', 'pc.caracteristica_id', '=', 'cc.id')
+                ->select('cc.nombre', 'cc.icono', 'cc.unidad', 'pc.valor')
+                ->where('pc.propiedad_id', $anuncio->id)
+                ->get();
+
+            $anuncio->amenities = DB::table('propiedad_amenities as pa')
+                ->join('amenities as ac', 'pa.amenity_id', '=', 'ac.id')
+                ->select('ac.nombre', 'ac.icon_url')
+                ->where('pa.propiedad_id', $anuncio->id)
+                ->where('pa.is_active', 1)
+                ->get();
+
+            $imagenPrincipal = collect();
+            if (!empty($anuncio->imagen_principal)) {
+                $imagenPrincipal->push((object)[
+                    'id' => 0,
+                    'titulo' => 'Imagen principal',
+                    'imagen' => $anuncio->imagen_principal,
+                ]);
+            }
+
+            $imagenesSecundarias = DB::table('propiedad_imagenes as img')
+                ->select('img.id', 'img.titulo', 'img.imagen')
+                ->where('img.propiedad_id', $anuncio->id)
+                ->where('img.is_active', 1)
+                ->get();
+
+            $anuncio->imagenes = $imagenPrincipal->merge($imagenesSecundarias);
+
+            $anuncio->planos = DB::table('propiedad_planos as pp')
+                ->select('pp.id', 'pp.titulo', 'pp.imagen')
+                ->where('pp.propiedad_id', $anuncio->id)
+                ->where('pp.is_active', 1)
+                ->get()
+                ->map(function ($plano) {
+                    $plano->caracteristicas = DB::table('plano_caracteristicas as pc')
+                        ->select('pc.nombre', 'pc.valor', 'pc.icono')
+                        ->where('pc.plano_id', $plano->id)
+                        ->where('pc.is_active', 1)
+                        ->get();
+                    return $plano;
+                });
+
+            $anuncio->videos = DB::table('propiedad_videos as pv')
+                ->select('pv.id', 'pv.titulo', 'pv.url', 'pv.tipo')
+                ->where('pv.propiedad_id', $anuncio->id)
+                ->where('pv.is_active', 1)
+                ->get();
+
+            $anuncio->imagen360 = DB::table('propiedad_imagenes360 as pimg')
+                ->select('pimg.id', 'pimg.titulo', 'pimg.imagen')
+                ->where('pimg.propiedad_id', $anuncio->id)
+                ->where('pimg.is_active', 1)
+                ->get();
+        }
 
         return response()->json([
             'success' => true,
-            'data' => $resultados
+            'data' => $anuncios
         ]);
     }
+
 
 
 
