@@ -539,6 +539,7 @@ class AnunciosController extends Controller
     {
         $q = $request->query('q');
         $tipo = $request->query('tipo');
+        $mode = $request->query('mode');
 
         $query = DB::table('propiedades as p')
             ->join('ubicaciones as u', 'p.ubicacion_id', '=', 'u.id')
@@ -575,12 +576,17 @@ class AnunciosController extends Controller
                     ->orWhere('p.descripcion', 'like', "%{$q}%")
                     ->orWhere('tp.nombre', 'like', "%{$q}%") // 🔍 tipo de propiedad (Casa, Departamento, etc.)
                     ->orWhere('u.nombre', 'like', "%{$q}%"); // 📍 ubicación (Chiclayo, Lambayeque, etc.)
+                    
             });
             /*$query->where(function($sub) use ($q) {
                 $sub->where('p.titulo', 'like', "%{$q}%")
                     ->orWhere('p.direccion', 'like', "%{$q}%")
                     ->orWhere('p.descripcion', 'like', "%{$q}%");
             });*/
+        }
+
+        if ($mode) {
+            $query->where('o.nombre', 'like', "%{$mode}%");
         }
 
         $anuncios = $query->orderBy('p.created_at', 'desc')
@@ -666,6 +672,29 @@ class AnunciosController extends Controller
             'data' => $anuncios
         ]);
     }
+
+
+
+    public function getQuienessomos()
+    {
+        $resultado = AnunciosModel::getpagina('nosotros');
+        return response()->json($resultado);
+    }
+
+    public function gettermcondiciones()
+    {
+        $resultado = AnunciosModel::getpagina('terminos-condiciones');
+        return response()->json($resultado);
+    }
+
+
+    public function getpoliticaprivacidad()
+    {
+        $resultado = AnunciosModel::getpagina('politica-privacidad');
+        return response()->json($resultado);
+    }
+
+
 
 
 

@@ -52,6 +52,8 @@ Route::prefix('planes')->group(function () {
 
 
 Route::prefix('paginaprincipal')->group(function () { 
+
+    Route::get('/tipos-operacion', [AnunciosController::class, 'tiposOperacion']); 
     Route::get('/tipos-propiedad', [AnunciosController::class, 'tiposPropiedad']);
     Route::get('/propiedades/buscar', [AnunciosController::class, 'buscarpropiedad']);
     Route::post('/propiedades/visita/{id}', [AnunciosController::class, 'sumarVisita']);
@@ -66,6 +68,10 @@ Route::prefix('paginaprincipal')->group(function () {
 
     //FILTROS DE PAGINA PRINCIPAL
     Route::get('/propiedades/relacionadas/{tipo_id}/{id}', [AnunciosController::class, 'getRelacionadas']);
+    Route::get('/quienes-somos', [AnunciosController::class, 'getQuienessomos']);
+    Route::get('/terminos-condiciones', [AnunciosController::class, 'gettermcondiciones']);
+    Route::get('/politicas-privacidad', [AnunciosController::class, 'getpoliticaprivacidad']);
+    
 });
 
 

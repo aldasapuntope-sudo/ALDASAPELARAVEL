@@ -62,6 +62,11 @@ class AnunciosModel extends Model
         return DB::select("SELECT * FROM propiedad_planos WHERE propiedad_id= $id AND is_active = 1 ORDER BY id ASC");
     }
 
+    
+
+
+    
+
 
     public static function eliminarplanos($id)
     {
@@ -536,5 +541,11 @@ class AnunciosModel extends Model
         DB::table('mensajes_contacto')->insert($data);
 
         return $data;
+    }
+
+
+    public static function getpagina($id)
+    {
+        return DB::select("SELECT * FROM paginas WHERE slug = '$id' AND is_active = 1 ORDER BY id ASC");
     }
 }
