@@ -15,6 +15,14 @@ class AnunciosController extends Controller
 {
 
     
+
+    public function getMensajeanuncio($id)
+    {
+        $resultado = AnunciosModel::getMensajeanuncio($id);
+        return response()->json($resultado);
+    }
+
+
     public function sumarVisita($id)
     {
         $resultado = AnunciosModel::sumarVisita($id);

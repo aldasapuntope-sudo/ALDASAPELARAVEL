@@ -43,6 +43,9 @@ Route::prefix('misanuncios')->group(function () {
     Route::get('/caracteristicas-catalogoid/{id}', [AnunciosController::class, 'categoriasCatalogoid']); 
     Route::get('/propiedad_amenities/{tpropiedad}', [AnunciosController::class, 'amenities']); 
     Route::get('/propiedad_amenitiesid/{id}', [AnunciosController::class, 'amenitiesid']); 
+
+    Route::get('/mensajes-anuncio/{id}', [AnunciosController::class, 'getMensajeanuncio']); 
+
 });
 
 Route::prefix('planes')->group(function () { 

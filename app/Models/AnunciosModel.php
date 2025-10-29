@@ -33,6 +33,18 @@ class AnunciosModel extends Model
         'is_active',
     ];
 
+    public static function getMensajeanuncio($userId)
+    {
+        return DB::select("
+            SELECT mc.*, p.titulo AS propiedad_titulo, p.imagen_principal AS propiedad_imagen
+            FROM mensajes_contacto mc
+            INNER JOIN propiedades p ON mc.anuncio_id = p.id
+            WHERE p.user_id = ? AND mc.is_active = 1
+            ORDER BY mc.id ASC
+        ", [$userId]);
+    }
+
+
     public static function sumarVisita($id)
     {
         $propiedad = self::find($id);
@@ -61,6 +73,8 @@ class AnunciosModel extends Model
     {
         return DB::select("SELECT * FROM propiedad_planos WHERE propiedad_id= $id AND is_active = 1 ORDER BY id ASC");
     }
+
+    
 
     
 
