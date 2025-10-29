@@ -69,6 +69,8 @@ Route::prefix('paginaprincipal')->group(function () {
     //FILTROS DE PAGINA PRINCIPAL
     Route::get('/propiedades/relacionadas/{tipo_id}/{id}', [AnunciosController::class, 'getRelacionadas']);
     Route::get('/quienes-somos', [AnunciosController::class, 'getQuienessomos']);
+    Route::get('/nosotros', [AnunciosController::class, 'getNosotros']);
+    
     Route::get('/terminos-condiciones', [AnunciosController::class, 'gettermcondiciones']);
     Route::get('/politicas-privacidad', [AnunciosController::class, 'getpoliticaprivacidad']);
     Route::get('/lugares-mas-buscados', [AdministracionController::class, 'obtenerLugaresMasBuscados']);
@@ -122,4 +124,10 @@ Route::prefix('administracion')->group(function () {
     Route::post('/rpaginas', [AdministracionController::class, 'registrarpaginas']);
     Route::put('/apaginas/{id}', [AdministracionController::class, 'actualizarpaginas']);
     Route::put('/epaginas/{id}/estado', [AdministracionController::class, 'cambiarEstadopaginas']);
+
+    //RUTAS CRUD CONFIGURACION
+    Route::get('/lconfiguraciones', [AdministracionController::class, 'listarconfiguracion']);
+    Route::post('/rconfiguraciones', [AdministracionController::class, 'registrarconfiguracion']);
+    Route::put('/aconfiguraciones/{id}', [AdministracionController::class, 'actualizarconfiguracion']);
+    Route::put('/econfiguraciones/{id}/estado', [AdministracionController::class, 'cambiarConfiguracion']);
 });

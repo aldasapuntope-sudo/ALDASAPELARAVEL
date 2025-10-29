@@ -282,6 +282,52 @@ class AdministracionModel extends Model
 
 
 
-    
+    // CRUD MODULO CONFIGURACIONES
+    public static function listarconfiguracion()
+    {
+        return DB::table('configuraciones')
+            ->orderBy('id', 'asc')
+            ->get();
+    }
+
+    // ✅ REGISTRAR CONFIGURACIÓN
+    public static function registrarconfiguracion($data, $rutaValor)
+    {
+        return DB::table('configuraciones')->insertGetId([
+            'clave' => $data['clave'],
+            'valor' => $rutaValor,
+            'tipo' => $data['tipo'],
+            'descripcion' => $data['descripcion'] ?? null,
+            'is_active' => $data['is_active'] ?? 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    // ✅ ACTUALIZAR CONFIGURACIÓN
+    public static function actualizarconfiguracion($id, $data, $rutaValor)
+    {
+        return DB::table('configuraciones')
+            ->where('id', $id)
+            ->update([
+                'clave' => $data['clave'],
+                'valor' => $rutaValor,
+                'tipo' => $data['tipo'],
+                'descripcion' => $data['descripcion'] ?? null,
+                'is_active' => $data['is_active'] ?? 1,
+                'updated_at' => now(),
+            ]);
+    }
+
+    // ✅ CAMBIAR ESTADO
+    public static function cambiarConfiguracion($id, $isActive)
+    {
+        return DB::table('configuraciones')
+            ->where('id', $id)
+            ->update([
+                'is_active' => $isActive,
+                'updated_at' => now(),
+            ]);
+    }
 
 }

@@ -681,6 +681,12 @@ class AnunciosController extends Controller
         return response()->json($resultado);
     }
 
+    public function getNosotros()
+    {
+        $resultado = AnunciosModel::getpagina('nosotros');
+        return response()->json($resultado);
+    }
+
     public function gettermcondiciones()
     {
         $resultado = AnunciosModel::getpagina('terminos-condiciones');

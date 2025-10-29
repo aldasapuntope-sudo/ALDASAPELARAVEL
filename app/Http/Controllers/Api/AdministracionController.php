@@ -664,4 +664,131 @@ class AdministracionController extends Controller
     }
 
 
+    // ✅ CRUD MODULO CONFIGURACIONES
+    public function listarconfiguracion()
+    {
+        return response()->json(AdministracionModel::listarconfiguracion());
+    }
+
+    public function registrarconfiguracion(Request $request)
+    {
+        try {
+            $rules = [
+                'clave' => 'required|string|max:150|unique:configuraciones,clave',
+                'tipo' => 'required|in:texto,imagen,color,numero,booleano',
+                'descripcion' => 'nullable|string|max:255',
+                'is_active' => 'boolean'
+            ];
+
+            // Si el tipo es imagen, valor puede ser file
+            if ($request->input('tipo') === 'imagen') {
+                $rules['valor'] = 'nullable|file|mimes:jpg,jpeg,png,webp|max:4096';
+            } else {
+                $rules['valor'] = 'nullable|string';
+            }
+
+            $validated = $request->validate($rules);
+
+
+            $rutaValor = $validated['valor'] ?? null;
+
+            // 📸 Si se envía imagen
+            if ($request->hasFile('valor') && $validated['tipo'] === 'imagen') {
+                $archivo = $request->file('valor');
+                $nombre = 'config_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+
+                $directorio = 'C:/xampp/htdocs/imagenes_configuraciones';
+                if (!file_exists($directorio)) {
+                    mkdir($directorio, 0777, true);
+                }
+
+                $archivo->move($directorio, $nombre);
+                $rutaValor = 'imagenes_configuraciones/' . $nombre;
+            }
+
+            // ✅ Insertar por modelo
+            $id = AdministracionModel::registrarconfiguracion($validated, $rutaValor);
+
+            $this->registrarBitacora('Crear', 'configuraciones', $id, 'Se registró la configuración: ' . $validated['clave']);
+
+            return response()->json(['message' => 'Configuración registrada correctamente.'], 201);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al registrar la configuración: ' . $e->getMessage()], 500);
+        }
+    }
+
+
+    public function actualizarconfiguracion(Request $request, $id)
+    {
+        try {
+            $rules = [
+                'clave' => 'required|string|max:150|unique:configuraciones,clave,' . $id,
+                'tipo' => 'required|in:texto,imagen,color,numero,booleano',
+                'descripcion' => 'nullable|string|max:255',
+                'is_active' => 'boolean'
+            ];
+
+            // Si el tipo es imagen, valor puede ser file
+            if ($request->input('tipo') === 'imagen') {
+                $rules['valor'] = 'nullable|file|mimes:jpg,jpeg,png,webp|max:4096';
+            } else {
+                $rules['valor'] = 'nullable|string';
+            }
+
+            $validated = $request->validate($rules);
+
+
+            $rutaValor = $validated['valor'] ?? $request->input('valor_actual');
+
+            // 📸 Si sube nueva imagen
+            if ($request->hasFile('valor') && $validated['tipo'] === 'imagen') {
+                $archivo = $request->file('valor');
+                $nombre = 'config_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+
+                $directorio = 'C:/xampp/htdocs/imagenes_configuraciones';
+                if (!file_exists($directorio)) {
+                    mkdir($directorio, 0777, true);
+                }
+
+                $archivo->move($directorio, $nombre);
+                $rutaValor = 'imagenes_configuraciones/' . $nombre;
+            }
+
+            AdministracionModel::actualizarconfiguracion($id, $validated, $rutaValor);
+
+            $this->registrarBitacora('Actualizar', 'configuraciones', $id, 'Se actualizó la configuración: ' . $validated['clave']);
+
+            return response()->json(['message' => 'Configuración actualizada correctamente.'], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al actualizar la configuración: ' . $e->getMessage()], 500);
+        }
+    }
+
+
+    public function cambiarConfiguracion($id, Request $request)
+    {
+        try {
+            $validated = $request->validate(['is_active' => 'required|boolean']);
+
+            AdministracionModel::cambiarConfiguracion($id, $validated['is_active']);
+
+            $this->registrarBitacora('Actualizar', 'configuraciones', $id, 'Se cambió el estado de la configuración.');
+
+            return response()->json([
+                'estado' => 1,
+                'mensaje' => 'Estado actualizado correctamente.'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Error al cambiar el estado.',
+                'detalle' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
 }
