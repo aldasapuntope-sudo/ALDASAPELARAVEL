@@ -229,4 +229,59 @@ class AdministracionModel extends Model
             ]);
     }
 
+
+    //  CRUD MODULO PAGINAS
+    public static function listarpaginas()
+    {
+        return DB::select('SELECT * FROM paginas');
+    }
+
+    // Registrar página
+    public static function registrarpaginas($data, $rutaImagen)
+    {
+        return DB::table('paginas')->insertGetId([
+            'slug' => $data['slug'],
+            'titulo' => $data['titulo'],
+            'contenido' => $data['contenido'] ?? null,
+            'meta_titulo' => $data['meta_titulo'] ?? null,
+            'meta_descripcion' => $data['meta_descripcion'] ?? null,
+            'imagen_destacada' => $rutaImagen ?? null,
+            'is_active' => $data['is_active'] ?? 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    // Actualizar página
+    public static function actualizarpaginas($id, $data, $rutaImagen)
+    {
+        DB::table('paginas')
+            ->where('id', $id)
+            ->update([
+                'slug' => $data['slug'],
+                'titulo' => $data['titulo'],
+                'contenido' => $data['contenido'] ?? null,
+                'meta_titulo' => $data['meta_titulo'] ?? null,
+                'meta_descripcion' => $data['meta_descripcion'] ?? null,
+                'imagen_destacada' => $rutaImagen ?? null,
+                'is_active' => $data['is_active'] ?? 1,
+                'updated_at' => now(),
+            ]);
+    }
+
+    // Cambiar estado (activar/desactivar página)
+    public static function cambiarEstadopaginas($id, $is_active)
+    {
+        DB::table('paginas')
+            ->where('id', $id)
+            ->update([
+                'is_active' => $is_active,
+                'updated_at' => now(),
+            ]);
+    }
+
+
+
+    
+
 }

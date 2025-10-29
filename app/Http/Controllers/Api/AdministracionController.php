@@ -19,6 +19,67 @@ class AdministracionController extends Controller
         $this->bitacora = new BitacoraModel();
     }
 
+    public function obtenerConfiguraciones()
+    {
+        try {
+            $configuraciones = DB::table('configuraciones')
+                ->where('is_active', 1)
+                ->pluck('valor', 'clave'); // 🔹 Devuelve un objeto tipo { clave: valor }
+
+            return response()->json($configuraciones, 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al obtener configuraciones: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function obtenerLugaresMasBuscados()
+    {
+        try {
+            $lugares = DB::table('ubicaciones')
+                ->join('propiedades', 'propiedades.ubicacion_id', '=', 'ubicaciones.id')
+                ->select(
+                    'ubicaciones.id',
+                    'ubicaciones.nombre',
+                    DB::raw('SUM(propiedades.visitas) as total_vistas')
+                )
+                ->where('ubicaciones.is_active', 1)
+                ->where('propiedades.is_active_publish', 1)
+                ->groupBy('ubicaciones.id', 'ubicaciones.nombre')
+                ->orderByDesc(DB::raw('SUM(propiedades.visitas)')) // 🔹 Ordenar por vistas totales (de mayor a menor)
+                ->limit(8) // 🔹 Solo los 8 más vistos
+                ->get();
+
+            return response()->json($lugares, 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al obtener los lugares más buscados: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /*public function obtenerLugaresMasBuscados()
+    {
+        try {
+            $lugares = DB::table('ubicaciones')
+                ->join('propiedades', 'propiedades.ubicacion_id', '=', 'ubicaciones.id')
+                ->select('ubicaciones.id', 'ubicaciones.nombre', DB::raw('COUNT(propiedades.id) as total'))
+                ->where('ubicaciones.is_active', 1)
+                ->where('propiedades.is_active_publish', 1)
+                ->groupBy('ubicaciones.id', 'ubicaciones.nombre')
+                ->orderByDesc(DB::raw('COUNT(propiedades.id)')) // 🔹 Asegura que ordene por el total
+                ->limit(8) // 🔹 Solo los 8 primeros
+                ->get();
+
+            return response()->json($lugares, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al obtener lugares más buscados: ' . $e->getMessage()], 500);
+        }
+    }*/
+
+
+
     private function registrarBitacora($accion, $tabla, $registro_id, $descripcion = null)
     {
         $user = Auth::user();
@@ -400,7 +461,7 @@ class AdministracionController extends Controller
     }
 
 
-    //CRUD MODEULO TIPO PROPIEDAD
+    //CRUD MODULO TIPO PROPIEDAD
     public function listarTiposPropiedad()
     {
         return response()->json(AdministracionModel::listarTiposPropiedad());
@@ -462,4 +523,145 @@ class AdministracionController extends Controller
             return response()->json(['estado' => 0, 'mensaje' => 'Error al cambiar estado', 'detalle' => $e->getMessage()], 500);
         }
     }
+
+    // CRUD MODULO PAGINAS
+    public function listarpaginas()
+    {
+        return response()->json(AdministracionModel::listarpaginas());
+    }
+
+    public function registrarpaginas(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'slug' => 'required|string|max:150',
+                'titulo' => 'required|string|max:255',
+                'contenido' => 'nullable|string',
+                'meta_titulo' => 'nullable|string|max:255',
+                'meta_descripcion' => 'nullable|string|max:255',
+                'imagen_destacada' => 'nullable|file|mimes:jpg,jpeg,png,webp',
+                'is_active' => 'boolean',
+            ]);
+
+            $rutaImagen = null;
+
+            // ✅ Si se envía una imagen, la guardamos físicamente
+            if ($request->hasFile('imagen_destacada')) {
+                $archivo = $request->file('imagen_destacada');
+                $nombre = 'pagina_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+
+                // 🔹 Ruta absoluta en tu servidor local
+                $directorio = 'C:/xampp/htdocs/imagenes_paginas';
+
+                if (!file_exists($directorio)) {
+                    mkdir($directorio, 0777, true);
+                }
+
+                // 🔹 Mover archivo físico
+                $archivo->move($directorio, $nombre);
+
+                // 🔹 Ruta que se guarda en la BD (relativa)
+                $rutaImagen = 'imagenes_paginas/' . $nombre;
+            }
+
+            // ✅ Guardamos la página en la base de datos
+            $id = AdministracionModel::registrarpaginas($validated, $rutaImagen);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Crear', 'paginas', $id, 'Se creó la página: ' . $validated['titulo']);
+
+            return response()->json(['message' => 'Página registrada correctamente'], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al registrar la página: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+
+    public function actualizarpaginas(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'slug' => 'required|string|max:150',
+                'titulo' => 'required|string|max:255',
+                'contenido' => 'nullable|string',
+                'meta_titulo' => 'nullable|string|max:255',
+                'meta_descripcion' => 'nullable|string|max:255',
+                'imagen_destacada' => 'nullable|file|mimes:jpg,jpeg,png,webp',
+                'is_active' => 'boolean',
+            ]);
+
+            // ✅ Mantiene la imagen actual si no se envía una nueva
+            $rutaImagen = $request->input('imagen_actual');
+
+            // ✅ Si se sube una nueva imagen, la guardamos
+            if ($request->hasFile('imagen_destacada')) {
+                $archivo = $request->file('imagen_destacada');
+                $nombre = 'pagina_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+
+                // 🔹 Ruta absoluta (tu carpeta real)
+                $directorio = 'C:/xampp/htdocs/imagenes_paginas';
+
+                if (!file_exists($directorio)) {
+                    mkdir($directorio, 0777, true);
+                }
+
+                // 🔹 Guardamos físicamente la imagen
+                $archivo->move($directorio, $nombre);
+
+                // 🔹 Guardamos solo la ruta relativa en la BD
+                $rutaImagen = 'imagenes_paginas/' . $nombre;
+            }
+
+            // ✅ Llamamos al modelo para actualizar
+            AdministracionModel::actualizarpaginas($id, $validated, $rutaImagen);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Actualizar', 'paginas', $id, 'Se actualizó la página: ' . $validated['titulo']);
+
+            return response()->json(['message' => 'Página actualizada correctamente'], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al actualizar la página: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+
+    public function cambiarEstadopaginas($id, Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'is_active' => 'required|boolean'
+            ]);
+
+            DB::table('paginas')
+                ->where('id', $id)
+                ->update([
+                    'is_active' => $validated['is_active'],
+                    'updated_at' => now(),
+                ]);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Actualizar', 'paginas', $id, 'Se cambió el estado de la página.');
+
+            return response()->json([
+                'estado' => 1,
+                'mensaje' => 'Estado actualizado correctamente.'
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Error al cambiar el estado.',
+                'detalle' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
 }

@@ -677,7 +677,7 @@ class AnunciosController extends Controller
 
     public function getQuienessomos()
     {
-        $resultado = AnunciosModel::getpagina('nosotros');
+        $resultado = AnunciosModel::getpagina('nosotros-home');
         return response()->json($resultado);
     }
 

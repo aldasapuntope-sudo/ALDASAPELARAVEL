@@ -52,7 +52,7 @@ Route::prefix('planes')->group(function () {
 
 
 Route::prefix('paginaprincipal')->group(function () { 
-
+    Route::get('/obtener-configuraciones', [AdministracionController::class, 'obtenerConfiguraciones']);
     Route::get('/tipos-operacion', [AnunciosController::class, 'tiposOperacion']); 
     Route::get('/tipos-propiedad', [AnunciosController::class, 'tiposPropiedad']);
     Route::get('/propiedades/buscar', [AnunciosController::class, 'buscarpropiedad']);
@@ -71,11 +71,14 @@ Route::prefix('paginaprincipal')->group(function () {
     Route::get('/quienes-somos', [AnunciosController::class, 'getQuienessomos']);
     Route::get('/terminos-condiciones', [AnunciosController::class, 'gettermcondiciones']);
     Route::get('/politicas-privacidad', [AnunciosController::class, 'getpoliticaprivacidad']);
+    Route::get('/lugares-mas-buscados', [AdministracionController::class, 'obtenerLugaresMasBuscados']);
     
 });
 
 
 Route::prefix('administracion')->group(function () { 
+
+    
 
     //RUTA DE PLANES
     Route::get('/lplanes', [AdministracionController::class, 'listarPlanes']); 
@@ -113,4 +116,10 @@ Route::prefix('administracion')->group(function () {
     Route::post('/rtipospropiedad', [AdministracionController::class, 'registrarTipoPropiedad']); // Crear tipo de propiedad
     Route::put('/atipospropiedad/{id}', [AdministracionController::class, 'actualizarTipoPropiedad']); // Actualizar tipo de propiedad
     Route::put('/etipospropiedad/{id}/estado', [AdministracionController::class, 'cambiarEstadoTipoPropiedad']); // Activar/Inactivar tipo de propiedad
+
+    //RUTAS CRUD PAGINAS
+    Route::get('/lpaginas', [AdministracionController::class, 'listarpaginas']);
+    Route::post('/rpaginas', [AdministracionController::class, 'registrarpaginas']);
+    Route::put('/apaginas/{id}', [AdministracionController::class, 'actualizarpaginas']);
+    Route::put('/epaginas/{id}/estado', [AdministracionController::class, 'cambiarEstadopaginas']);
 });
