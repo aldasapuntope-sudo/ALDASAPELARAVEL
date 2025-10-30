@@ -330,4 +330,13 @@ class AdministracionModel extends Model
             ]);
     }
 
+
+    // CRUD MODULO BITACORA
+    public static function listarbitacora()
+    {
+        return DB::table('bitacora')
+            ->orderBy('id', 'asc')
+            ->get();
+    }
+
 }

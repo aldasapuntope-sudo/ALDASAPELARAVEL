@@ -130,6 +130,18 @@ class AnunciosModel extends Model
                             'created_at' => now(),
                             'updated_at' => now(),
                         ]);
+    } 
+
+    public static function guardarImagenes($idPropiedad, $titulo, $nombreArchivo)
+    {
+        return DB::table('propiedad_imagenes')->insert([
+            'propiedad_id' => $idPropiedad,
+            'titulo' => $titulo,
+            'imagen' => 'propiedades_imagenes/' . $nombreArchivo,
+            'is_active' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 
 
@@ -561,5 +573,30 @@ class AnunciosModel extends Model
     public static function getpagina($id)
     {
         return DB::select("SELECT * FROM paginas WHERE slug = '$id' AND is_active = 1 ORDER BY id ASC");
+    }
+
+    public static function guardarFavorito($usuario_id, $anuncio_id)
+    {
+        // Verificar si ya existe ese favorito
+        $existe = DB::table('favoritos')
+            ->where('usuario_id', $usuario_id)
+            ->where('anuncio_id', $anuncio_id)
+            ->first();
+
+        if ($existe) {
+            throw new \Exception('Ya está agregado a favoritos.');
+        }
+
+        // Insertar nuevo favorito
+        $data = [
+            'usuario_id' => $usuario_id,
+            'anuncio_id' => $anuncio_id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+
+        DB::table('favoritos')->insert($data);
+
+        return $data;
     }
 }

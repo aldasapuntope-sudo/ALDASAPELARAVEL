@@ -78,6 +78,10 @@ Route::prefix('paginaprincipal')->group(function () {
     Route::get('/politicas-privacidad', [AnunciosController::class, 'getpoliticaprivacidad']);
     Route::get('/lugares-mas-buscados', [AdministracionController::class, 'obtenerLugaresMasBuscados']);
     
+
+    Route::get('/favoritos/existe/{userid}/{anuncioid}', [AnunciosController::class, 'existeFavorito']); 
+    Route::post('/favoritos/guardar', [AnunciosController::class, 'registrarfavoritos']); 
+    Route::post('/favoritos/eliminar', [AnunciosController::class, 'eliminarfavoritos']); 
 });
 
 
@@ -133,4 +137,8 @@ Route::prefix('administracion')->group(function () {
     Route::post('/rconfiguraciones', [AdministracionController::class, 'registrarconfiguracion']);
     Route::put('/aconfiguraciones/{id}', [AdministracionController::class, 'actualizarconfiguracion']);
     Route::put('/econfiguraciones/{id}/estado', [AdministracionController::class, 'cambiarConfiguracion']);
+
+
+    //RUTA BITACORA
+    Route::get('/lbitacora', [AdministracionController::class, 'listarbitacora']);
 });

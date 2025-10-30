@@ -318,7 +318,7 @@ class AdministracionController extends Controller
         return response()->json(AdministracionModel::listarCaracteristicasCatalogo());
     }
 
-    public function registrarCaracteristicaCatalogo(Request $request)
+    /*public function registrarCaracteristicaCatalogo(Request $request)
     {
         try {
             $validated = $request->validate([
@@ -343,7 +343,54 @@ class AdministracionController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error al registrar característica: ' . $e->getMessage()], 500);
         }
+    }*/
+
+    public function registrarCaracteristicaCatalogo(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:255',
+                'unidad' => 'required|string|max:50',
+                'tpropiedad_id' => 'required|integer',
+                'is_active' => 'boolean',
+                'icono' => 'nullable|file|mimes:png,jpg,jpeg,svg',
+            ]);
+
+            $rutaIcono = null;
+
+            // ✅ Si se envía un icono, lo guardamos físicamente
+            if ($request->hasFile('icono')) {
+                $archivo = $request->file('icono');
+                $nombre = 'icono_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+
+                // 🔹 Directorio donde se guardarán los iconos
+                $directorio = 'C:/xampp/htdocs/iconos';
+
+                if (!file_exists($directorio)) {
+                    mkdir($directorio, 0777, true);
+                }
+
+                // 🔹 Mover archivo físico
+                $archivo->move($directorio, $nombre);
+
+                // 🔹 Ruta que se guarda en la BD (relativa)
+                $rutaIcono = 'iconos/' . $nombre;
+            }
+
+            $validated['icono'] = $rutaIcono;
+
+            // ✅ Guardamos la característica en la BD
+            $id = AdministracionModel::registrarCaracteristicaCatalogo($validated);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Crear', 'caracteristicas_catalogo', $id, 'Se registró característica: ' . $validated['nombre']);
+
+            return response()->json(['message' => 'Característica registrada correctamente'], 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al registrar característica: ' . $e->getMessage()], 500);
+        }
     }
+
 
     public function actualizarCaracteristicaCatalogo(Request $request, $id)
     {
@@ -790,5 +837,11 @@ class AdministracionController extends Controller
         }
     }
 
+
+    // ✅ CRUD MODULO BITACORA
+    public function listarbitacora()
+    {
+        return response()->json(AdministracionModel::listarbitacora());
+    }
 
 }

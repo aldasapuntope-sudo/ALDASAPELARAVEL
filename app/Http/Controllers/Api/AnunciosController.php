@@ -68,6 +68,8 @@ class AnunciosController extends Controller
     public function registraranuncio(Request $request)
     {
         try {
+
+            
             // 1️⃣ Validar campos obligatorios
             $validated = $request->validate([
                 'tipo_id' => 'required|integer',
@@ -133,7 +135,7 @@ class AnunciosController extends Controller
                 }
 
                 $archivo->move($directorioPropiedades, $nombre);
-                $rutaImagen = 'http://localhost/propiedades/' . $nombre;
+                $rutaImagen = 'propiedades/' . $nombre;
             }
 
             // 6️⃣ Crear anuncio principal
@@ -173,6 +175,26 @@ class AnunciosController extends Controller
                     }
                 }
             }
+
+            // 9️⃣ Subir y guardar imágenes secundarias
+            if ($request->hasFile('imagenes_secundarias')) {
+                foreach ($request->file('imagenes_secundarias') as $imagenSecundaria) {
+                    if ($imagenSecundaria->isValid()) {
+
+                        $directorioImagenes = 'C:/xampp/htdocs/propiedades_imagenes';
+                        if (!file_exists($directorioImagenes)) {
+                            mkdir($directorioImagenes, 0777, true);
+                        }
+
+                        $nombreArchivo = 'img_' . Str::random(10) . '.' . $imagenSecundaria->getClientOriginalExtension();
+                        $imagenSecundaria->move($directorioImagenes, $nombreArchivo);
+
+                        // ✅ Llamamos al modelo
+                        AnunciosModel::guardarImagenes($idPropiedad, null, $nombreArchivo);
+                    }
+                }
+            }
+
 
             // 9️⃣ Respuesta exitosa
             return response()->json([
@@ -319,7 +341,7 @@ class AnunciosController extends Controller
                 }
 
                 $archivo->move($directorioEscritorio, $nombre);
-                $rutaImagen = 'http://localhost/propiedades/' . $nombre;
+                $rutaImagen = 'propiedades/' . $nombre;
             }
 
             // 4️⃣ Actualizar el anuncio
@@ -374,6 +396,25 @@ class AnunciosController extends Controller
                             'created_at' => now(),
                             'updated_at' => now(),
                         ]);*/
+                    }
+                }
+            }
+
+            // 9️⃣ Subir y guardar imágenes secundarias
+            if ($request->hasFile('imagenes_secundarias')) {
+                foreach ($request->file('imagenes_secundarias') as $imagenSecundaria) {
+                    if ($imagenSecundaria->isValid()) {
+
+                        $directorioImagenes = 'C:/xampp/htdocs/propiedades_imagenes';
+                        if (!file_exists($directorioImagenes)) {
+                            mkdir($directorioImagenes, 0777, true);
+                        }
+
+                        $nombreArchivo = 'img_' . Str::random(10) . '.' . $imagenSecundaria->getClientOriginalExtension();
+                        $imagenSecundaria->move($directorioImagenes, $nombreArchivo);
+
+                        // ✅ Llamamos al modelo
+                        AnunciosModel::guardarImagenes($id, null, $nombreArchivo);
                     }
                 }
             }
@@ -709,6 +750,67 @@ class AnunciosController extends Controller
     }
 
 
+    public function existeFavorito($usuario_id, $anuncio_id)
+    {
+        $existe = DB::table('favoritos')
+            ->where('usuario_id', $usuario_id)
+            ->where('anuncio_id', $anuncio_id)
+            ->exists();
+
+        return response()->json(['existe' => $existe]);
+    }
+
+    public function registrarfavoritos(Request $request)
+    {
+        try {
+            // ✅ Validación de datos
+            $validated = $request->validate([
+                'usuario_id' => 'required|integer',
+                'anuncio_id' => 'required|integer',
+            ]);
+
+            // ✅ Llamada al modelo
+            $favorito = AnunciosModel::guardarFavorito(
+                $validated['usuario_id'],
+                $validated['anuncio_id']
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Agregado a favoritos correctamente',
+                'data' => $favorito
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // ❌ Error de validación
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            // ❌ Cualquier otro error
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al registrar el favorito',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function eliminarfavoritos(Request $request)
+    {
+        $validated = $request->validate([
+            'usuario_id' => 'required|integer',
+            'anuncio_id' => 'required|integer',
+        ]);
+
+        DB::table('favoritos')
+            ->where('usuario_id', $validated['usuario_id'])
+            ->where('anuncio_id', $validated['anuncio_id'])
+            ->delete();
+
+        return response()->json(['success' => true, 'message' => 'Eliminado de favoritos']);
+    }
 
 
 
