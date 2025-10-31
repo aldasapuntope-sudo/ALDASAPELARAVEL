@@ -33,6 +33,12 @@ class AnunciosModel extends Model
         'is_active',
     ];
 
+
+    public static function getmonedas()
+    {
+        return DB::select("SELECT * FROM monedas WHERE is_active = 1 ORDER BY id ASC");
+    }
+
     public static function getMensajeanuncio($userId)
     {
         return DB::select("
@@ -74,6 +80,11 @@ class AnunciosModel extends Model
         return DB::select("SELECT * FROM propiedad_planos WHERE propiedad_id= $id AND is_active = 1 ORDER BY id ASC");
     }
 
+    public static function listaimgsecundarias($id)
+    {
+        return DB::select("SELECT * FROM propiedad_imagenes WHERE propiedad_id= $id AND is_active = 1 ORDER BY id ASC");
+    }
+
     
 
     
@@ -85,6 +96,11 @@ class AnunciosModel extends Model
     public static function eliminarplanos($id)
     {
         return DB::update("UPDATE propiedad_planos SET is_active = 0 WHERE id = ?", [$id]);
+    }
+
+    public static function eliminarimgsecundarias($id)
+    {
+        return DB::update("UPDATE propiedad_imagenes SET is_active = 0 WHERE id = ?", [$id]);
     }
     
 
@@ -109,6 +125,7 @@ class AnunciosModel extends Model
             'tipo_id' => $data['tipo_id'],
             'operacion_id' => $data['operacion_id'],
             'ubicacion_id' => $data['ubicacion_id'],
+            'moneda_id' => $data['moneda_id'],
             'titulo' => $data['titulo'],
             'direccion' => $data['direccion'],
             'descripcion' => $data['descripcion'],
@@ -248,6 +265,20 @@ class AnunciosModel extends Model
     }
 
 
+    public static function guardarvideourl($idPropiedad, $url)
+    {
+        return DB::table('propiedad_videos')->insert([
+            'propiedad_id' => $idPropiedad,
+            'titulo' => '',
+            'url' => $url,
+            'tipo' => 'youtube',
+            'is_active' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+
 
 
     /*public static function listaranuncio($idpublish, $id)
@@ -267,9 +298,10 @@ class AnunciosModel extends Model
                 o.id as id_operacion, 
                 o.nombre as operaciones, 
                 p.titulo, 
-                p.descripcion, 
-                p.precio, 
-                p.direccion, 
+                p.descripcion,
+                p.precio,
+                p.moneda_id,
+                p.direccion,
                 p.imagen_principal, 
                 p.is_active_publish 
             FROM propiedades p 
@@ -334,7 +366,7 @@ class AnunciosModel extends Model
 
             
             $anuncio->videos = DB::table('propiedad_videos as pv')
-                ->select('pv.id', 'pv.titulo', 'pv.url', 'pv.tipo')
+                ->select('pv.url')
                 ->where('pv.propiedad_id', $anuncio->id)
                 ->where('pv.is_active', 1)
                 ->get();
@@ -352,6 +384,7 @@ class AnunciosModel extends Model
                 'tipo_id' => $data['tipo_id'],
                 'operacion_id' => $data['operacion_id'],
                 'ubicacion_id' => $data['ubicacion_id'],
+                'moneda_id' => $data['moneda_id'],
                 'titulo' => $data['titulo'],
                 'descripcion' => $data['descripcion'],
                 'precio' => $data['precio'],
@@ -401,6 +434,7 @@ class AnunciosModel extends Model
                 p.titulo, 
                 p.descripcion, 
                 p.precio, 
+                m.simbolo AS moneda_simbolo,
                 p.direccion, 
                 p.imagen_principal, 
                 p.is_active_publish 
@@ -408,6 +442,7 @@ class AnunciosModel extends Model
             INNER JOIN ubicaciones u ON p.ubicacion_id = u.id 
             INNER JOIN tipos_propiedad tp ON p.tipo_id = tp.id 
             INNER JOIN operaciones o ON p.operacion_id = o.id 
+            INNER JOIN monedas m ON p.moneda_id = m.id
             WHERE p.is_active = 1 
             AND p.is_active_publish = $idpublish 
             ORDER BY p.id ASC
@@ -450,6 +485,9 @@ class AnunciosModel extends Model
                 p.titulo, 
                 p.descripcion, 
                 p.precio, 
+                m.nombre AS moneda_nombre,
+                m.simbolo AS moneda_simbolo,
+                m.codigo AS moneda_codigo,
                 p.direccion, 
                 p.imagen_principal, 
                 p.is_active_publish,
@@ -459,6 +497,7 @@ class AnunciosModel extends Model
             INNER JOIN ubicaciones u ON p.ubicacion_id = u.id 
             INNER JOIN tipos_propiedad tp ON p.tipo_id = tp.id 
             INNER JOIN operaciones o ON p.operacion_id = o.id 
+            INNER JOIN monedas m ON p.moneda_id = m.id
             WHERE p.is_active = 1 
             AND p.is_active_publish = 1
             AND p.id = $idpublish 

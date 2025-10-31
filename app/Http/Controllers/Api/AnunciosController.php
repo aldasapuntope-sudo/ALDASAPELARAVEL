@@ -14,7 +14,11 @@ use Carbon\Carbon;
 class AnunciosController extends Controller
 {
 
-    
+    public function getmonedas()
+    {
+        $resultado = AnunciosModel::getmonedas();
+        return response()->json($resultado);
+    }
 
     public function getMensajeanuncio($id)
     {
@@ -35,6 +39,12 @@ class AnunciosController extends Controller
         return response()->json($resultado);
     }
 
+    public function listaimgsecundarias($id)
+    {
+        $resultado = AnunciosModel::listaimgsecundarias($id);
+        return response()->json($resultado);
+    }
+
     public function eliminarplanos($id)
     {
         $resultado = AnunciosModel::eliminarplanos($id);
@@ -46,6 +56,17 @@ class AnunciosController extends Controller
         }
     }
     
+
+    public function eliminarimgsecundarias($id)
+    {
+        $resultado = AnunciosModel::eliminarimgsecundarias($id);
+        
+        if ($resultado > 0) {
+            return response()->json(['success' => true, 'message' => 'Plano eliminado correctamente']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'No se pudo eliminar el plano']);
+        }
+    }
 
     public function tiposPropiedad()
     {
@@ -75,6 +96,7 @@ class AnunciosController extends Controller
                 'tipo_id' => 'required|integer',
                 'operacion_id' => 'required|integer',
                 'ubicacion_id' => 'required|integer',
+                'moneda_id' => 'required|integer|exists:monedas,id',
                 'titulo' => 'required|string|max:255',
                 'descripcion' => 'required|string',
                 'precio' => 'required|numeric|min:0',
@@ -312,6 +334,7 @@ class AnunciosController extends Controller
                 'tipo_id' => 'required|integer',
                 'operacion_id' => 'required|integer',
                 'ubicacion_id' => 'required|integer',
+                'moneda_id' => 'required|integer|exists:monedas,id',
                 'titulo' => 'required|string|max:255',
                 'descripcion' => 'required|string',
                 'precio' => 'required|numeric|min:0',
@@ -418,6 +441,19 @@ class AnunciosController extends Controller
                     }
                 }
             }
+
+            if ($request->filled('video_url')) {
+                $video_url = trim($request->input('video_url'));
+
+                if (!empty($video_url)) {
+                    // Elimina los videos antiguos si lo deseas
+                    DB::table('propiedad_videos')->where('propiedad_id', $id)->delete();
+
+                    // Guarda el nuevo video
+                    AnunciosModel::guardarvideourl($id, $video_url);
+                }
+            }
+
 
 
             // 6️⃣ Respuesta exitosa
@@ -536,6 +572,33 @@ class AnunciosController extends Controller
     //FILTROS PAGINA PRINCIPAL
     public function getRelacionadas($tipo_id, $idActual)
     {
+        $relacionadas = AnunciosModel::join('monedas', 'propiedades.moneda_id', '=', 'monedas.id')
+            ->where('propiedades.tipo_id', $tipo_id)
+            ->where('propiedades.id', '!=', $idActual)
+            ->where('propiedades.is_active_publish', 1)
+            ->where('propiedades.is_active', 1)
+            ->orderBy('propiedades.visitas', 'desc')
+            ->limit(4)
+            ->get([
+                'propiedades.id',
+                'propiedades.titulo',
+                'propiedades.precio',
+                'propiedades.imagen_principal',
+                'propiedades.direccion',
+                'propiedades.operacion_id',
+                'propiedades.visitas',
+                'monedas.nombre as moneda_nombre',
+                'monedas.simbolo as moneda_simbolo',
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $relacionadas
+        ]);
+    }
+
+    /*public function getRelacionadas($tipo_id, $idActual)
+    {
         $relacionadas = AnunciosModel::where('tipo_id', $tipo_id)
             ->where('id', '!=', $idActual) // Excluye la actual
             ->where('is_active_publish', 1)
@@ -548,7 +611,7 @@ class AnunciosController extends Controller
             'success' => true,
             'data' => $relacionadas
         ]);
-    }
+    }*/
 
     public function buscar(Request $request)
     {

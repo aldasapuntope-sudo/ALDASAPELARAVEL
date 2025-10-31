@@ -33,6 +33,9 @@ Route::prefix('miperfil')->group(function () {
 Route::prefix('misanuncios')->group(function () {
     Route::get('/lplanos/{id}', [AnunciosController::class, 'listarplanos']); 
     Route::delete('/eplanos/{id}', [AnunciosController::class, 'eliminarplanos']);
+    Route::get('/limagenesecundarias/{id}', [AnunciosController::class, 'listaimgsecundarias']); 
+    Route::delete('/eimagenesecundarias/{id}', [AnunciosController::class, 'eliminarimgsecundarias']);
+
     Route::get('/tipos-propiedad', [AnunciosController::class, 'tiposPropiedad']); 
     Route::get('/tipos-operacion', [AnunciosController::class, 'tiposOperacion']); 
     Route::get('/tipos-ubicaciones', [AnunciosController::class, 'tiposUbicaciones']); 
@@ -45,7 +48,7 @@ Route::prefix('misanuncios')->group(function () {
     Route::get('/propiedad_amenitiesid/{id}', [AnunciosController::class, 'amenitiesid']); 
 
     Route::get('/mensajes-anuncio/{id}', [AnunciosController::class, 'getMensajeanuncio']); 
-
+    Route::get('/monedas', [AnunciosController::class, 'getmonedas']);
 });
 
 Route::prefix('planes')->group(function () { 
