@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AnunciosController;
 use App\Http\Controllers\Api\PlanesController;
 use App\Http\Controllers\Api\AdministracionController;
+use App\Http\Controllers\Api\PasswordResetController;
+
 
 Route::prefix('Loginform')->group(function () { 
     Route::post('/auth/google', [AuthController::class, 'loginform']); 
@@ -90,13 +92,21 @@ Route::prefix('paginaprincipal')->group(function () {
 
 Route::prefix('administracion')->group(function () { 
 
-    
+    Route::get('/lusuarioscombobx', [AdministracionController::class, 'listarusuarioscombox']); 
+    Route::get('/lplanescombox', [AdministracionController::class, 'listarplanescombox']); 
 
     //RUTA DE PLANES
     Route::get('/lplanes', [AdministracionController::class, 'listarPlanes']); 
     Route::put('/aplanes/{id}', [AdministracionController::class, 'actualizarPlanes']); 
     Route::post('/rplanes', [AdministracionController::class, 'registrarPlanes']); 
     Route::put('/eplanes/{id}/estado', [AdministracionController::class, 'cambiarEstadoPlan']); 
+
+    // RUTA DE PLANES DE USUARIOS
+    Route::get('/lplanes_usuario', [AdministracionController::class, 'listarPlanesUsuario']);
+    Route::put('/aplanes_usuario/{id}', [AdministracionController::class, 'actualizarPlanesUsuario']);
+    Route::post('/rplanes_usuario', [AdministracionController::class, 'registrarPlanesUsuario']);
+    Route::put('/eplanes_usuario/{id}/estado', [AdministracionController::class, 'cambiarEstadoPlanesUsuario']);
+
 
     //RUTA CURD DE TIPO DE DOCUMENTO
     Route::get('/ltipodocumento', [AdministracionController::class, 'ltipoDocumento']); 
@@ -145,3 +155,9 @@ Route::prefix('administracion')->group(function () {
     //RUTA BITACORA
     Route::get('/lbitacora', [AdministracionController::class, 'listarbitacora']);
 });
+
+
+Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink']);
+Route::get('/reset-password/{token}', [PasswordResetController::class, 'validateToken']);
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
+Route::post('/verify-reset-token', [PasswordResetController::class, 'verifyToken']);

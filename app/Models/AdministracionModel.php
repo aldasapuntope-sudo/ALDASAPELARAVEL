@@ -7,6 +7,19 @@ use Illuminate\Support\Facades\DB;
 
 class AdministracionModel extends Model
 {
+    
+
+    public static function listarusuarioscombox()
+    {
+        return DB::select("SELECT id, CONCAT(nombre, ' ', apellido) AS nombre_completo FROM usuario");
+    }
+
+
+    public static function listarplanescombox()
+    {
+        return DB::select('SELECT * FROM planes');
+    }
+
     public static function tiposPropiedad()
     {
         return DB::select('SELECT * FROM tipos_propiedad');
@@ -61,6 +74,56 @@ class AdministracionModel extends Model
                 'updated_at' => now(),
             ]);
     }
+
+
+    // ================================
+    // PLANES DE USUARIOS
+    // ================================
+
+    public static function listarPlanesUsuario()
+    {
+        return DB::table('usuarios_planes AS up')
+            ->join('usuario AS u', 'up.user_id', '=', 'u.id')
+            ->join('planes AS p', 'up.plan_id', '=', 'p.id')
+            ->select(
+                'up.id',
+                'u.nombre AS usuario',
+                'p.nombre AS plan',
+                'up.fecha_inicio',
+                'up.fecha_fin',
+                'up.anuncios_disponibles',
+                'up.estado'
+            )
+            ->orderBy('up.id', 'desc')
+            ->get();
+    }
+
+    public static function crearPlanUsuario($data)
+    {
+        return DB::table('usuarios_planes')->insertGetId([
+            'user_id' => $data['usuario_id'],
+            'plan_id' => $data['plan_id'],
+            'fecha_inicio' => $data['fecha_inicio'],
+            'fecha_fin' => $data['fecha_fin'],
+            'anuncios_disponibles' => $data['anuncios_disponibles'] ?? 0,
+            'estado' => $data['estado'] ?? 'activo',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    public static function actualizarPlanUsuario($id, $data)
+    {
+        return DB::table('usuarios_planes')->where('id', $id)->update([
+            'plan_id' => $data['plan_id'],
+            'fecha_inicio' => $data['fecha_inicio'],
+            'fecha_fin' => $data['fecha_fin'],
+            'anuncios_disponibles' => $data['anuncios_disponibles'] ?? 0,
+            'estado' => $data['estado'] ?? 'activo',
+            'updated_at' => now(),
+        ]);
+    }
+
 
 
     //CRUD MODULO TIPO DOCUMENTO

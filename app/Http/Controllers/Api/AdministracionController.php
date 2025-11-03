@@ -19,6 +19,16 @@ class AdministracionController extends Controller
         $this->bitacora = new BitacoraModel();
     }
 
+    public function listarusuarioscombox()
+    {
+        return response()->json(AdministracionModel::listarusuarioscombox());
+    }
+
+    public function listarplanescombox()
+    {
+        return response()->json(AdministracionModel::listarplanescombox());
+    }
+
     public function obtenerConfiguraciones()
     {
         try {
@@ -177,6 +187,82 @@ class AdministracionController extends Controller
             return response()->json(['estado' => 0, 'mensaje' => 'Error al cambiar estado del plan', 'detalle' => $e->getMessage()], 500);
         }
     }
+
+
+
+    // ================================
+    // PLANES DE USUARIOS
+    // ================================
+
+    public function listarPlanesUsuario()
+    {
+        return response()->json(AdministracionModel::listarPlanesUsuario());
+    }
+
+    public function registrarPlanesUsuario(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'usuario_id' => 'required|integer|exists:usuarios,id',
+                'plan_id' => 'required|integer|exists:planes,id',
+                'fecha_inicio' => 'required|date',
+                'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+                'anuncios_disponibles' => 'nullable|integer|min:0',
+                'estado' => 'nullable|string|in:activo,inactivo',
+            ]);
+
+            $idPlanUsuario = AdministracionModel::crearPlanUsuario($validated);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Crear', 'planes_usuario', $idPlanUsuario, 'Se asignó un plan a un usuario.');
+
+            return response()->json(['estado' => 1, 'mensaje' => 'Plan de usuario registrado correctamente.', 'id' => $idPlanUsuario], 201);
+        } catch (\Exception $e) {
+            return response()->json(['estado' => 0, 'mensaje' => 'Error al registrar el plan de usuario', 'detalle' => $e->getMessage()], 500);
+        }
+    }
+
+    public function actualizarPlanesUsuario(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'plan_id' => 'required|integer|exists:planes,id',
+                'fecha_inicio' => 'required|date',
+                'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+                'anuncios_disponibles' => 'nullable|integer|min:0',
+                'estado' => 'nullable|string|in:activo,inactivo',
+            ]);
+
+            AdministracionModel::actualizarPlanUsuario($id, $validated);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Actualizar', 'planes_usuario', $id, 'Se actualizó el plan de usuario.');
+
+            return response()->json(['estado' => 1, 'mensaje' => 'Plan de usuario actualizado correctamente.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['estado' => 0, 'mensaje' => 'Error al actualizar el plan de usuario', 'detalle' => $e->getMessage()], 500);
+        }
+    }
+
+    public function cambiarEstadoPlanesUsuario($id, Request $request)
+    {
+        try {
+            $validated = $request->validate(['estado' => 'required|string|in:activo,inactivo']);
+
+            DB::table('usuarios_planes')->where('id', $id)->update([
+                'estado' => $validated['estado'],
+                'updated_at' => now(),
+            ]);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Actualizar', 'planes_usuario', $id, 'Se cambió el estado del plan de usuario.');
+
+            return response()->json(['estado' => 1, 'mensaje' => 'Estado del plan de usuario actualizado correctamente.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['estado' => 0, 'mensaje' => 'Error al cambiar estado del plan de usuario', 'detalle' => $e->getMessage()], 500);
+        }
+    }
+
 
     // ---------------------------------------------------------
     // CRUD TIPO DOCUMENTO

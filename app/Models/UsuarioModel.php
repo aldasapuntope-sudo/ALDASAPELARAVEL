@@ -21,6 +21,11 @@ class UsuarioModel extends Authenticatable
         );
     }
 
+    public static function actualizarPassword($email, $nuevoHash)
+    {
+        return \DB::update('UPDATE usuario SET password = ? WHERE email = ?', [$nuevoHash, $email]);
+    }
+
     public static function validarPorCredenciales($email, $clave)
     {
         return DB::select(
