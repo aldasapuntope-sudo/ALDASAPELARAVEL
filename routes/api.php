@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\AnunciosController;
 use App\Http\Controllers\Api\PlanesController;
 use App\Http\Controllers\Api\AdministracionController;
 use App\Http\Controllers\Api\PasswordResetController;
+use App\Http\Controllers\Api\MenuController;
+
 
 
 Route::prefix('Loginform')->group(function () { 
@@ -161,3 +163,5 @@ Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'
 Route::get('/reset-password/{token}', [PasswordResetController::class, 'validateToken']);
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
 Route::post('/verify-reset-token', [PasswordResetController::class, 'verifyToken']);
+
+Route::get('/menus', [MenuController::class, 'index']);

@@ -46,7 +46,7 @@ class AnunciosModel extends Model
             FROM mensajes_contacto mc
             INNER JOIN propiedades p ON mc.anuncio_id = p.id
             WHERE p.user_id = ? AND mc.is_active = 1
-            ORDER BY mc.id ASC
+            ORDER BY mc.id DESC
         ", [$userId]);
     }
 
