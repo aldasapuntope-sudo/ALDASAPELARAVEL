@@ -40,6 +40,34 @@ class MenuController extends Controller
             ->orderBy('nombre')
             ->get();
 
+
+        $propiedadesMasVistas = DB::table('propiedades')
+            ->join('ubicaciones', 'ubicaciones.id', '=', 'propiedades.ubicacion_id')
+            ->select(
+                'propiedades.id',
+                'propiedades.titulo',
+                'ubicaciones.nombre as ubicacion'
+            )
+            ->where('propiedades.is_active_publish', 1)
+            ->where('propiedades.is_active', 1)
+            ->orderByDesc('propiedades.visitas')
+            ->limit(5)
+            ->get()
+            ->map(function ($propiedad) {
+                // Crear slug amigable del título
+                $slugTitulo = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $propiedad->titulo)));
+
+                // Crear slug amigable de la ubicación
+                $slugUbicacion = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $propiedad->ubicacion)));
+
+                // Crear URL completa con ambos slugs
+                $propiedad->url = url("http://localhost:3000/anuncio/{$propiedad->id}-{$slugTitulo}-{$slugUbicacion}");
+
+                return $propiedad;
+            });
+
+
+
         // Construir dinámicamente las secciones por operación
         $menu = [];
 
@@ -49,6 +77,7 @@ class MenuController extends Controller
             $menu[$nombreOperacion] = [
                 'tipo' => $tiposPropiedad,
                 'ciudad' => $ubicaciones,
+                'propiedades_mas_vistas' => $propiedadesMasVistas,
             ];
         }
 
