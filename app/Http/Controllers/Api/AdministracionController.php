@@ -230,7 +230,7 @@ class AdministracionController extends Controller
                 'fecha_inicio' => 'required|date',
                 'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
                 'anuncios_disponibles' => 'nullable|integer|min:0',
-                'estado' => 'nullable|string|in:activo,inactivo',
+                'estado' => 'required|in:activo,vencido',
             ]);
 
             AdministracionModel::actualizarPlanUsuario($id, $validated);

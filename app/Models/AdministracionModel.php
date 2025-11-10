@@ -92,7 +92,9 @@ class AdministracionModel extends Model
                 'up.fecha_inicio',
                 'up.fecha_fin',
                 'up.anuncios_disponibles',
-                'up.estado'
+                'up.estado',
+                'up.user_id',
+                'plan_id'
             )
             ->orderBy('up.id', 'desc')
             ->get();
@@ -116,8 +118,8 @@ class AdministracionModel extends Model
     {
         return DB::table('usuarios_planes')->where('id', $id)->update([
             'plan_id' => $data['plan_id'],
-            'fecha_inicio' => $data['fecha_inicio'],
-            'fecha_fin' => $data['fecha_fin'],
+            'fecha_inicio' => date('Y-m-d H:i:s', strtotime($data['fecha_inicio'])),
+            'fecha_fin' => date('Y-m-d H:i:s', strtotime($data['fecha_fin'])),
             'anuncios_disponibles' => $data['anuncios_disponibles'] ?? 0,
             'estado' => $data['estado'] ?? 'activo',
             'updated_at' => now(),

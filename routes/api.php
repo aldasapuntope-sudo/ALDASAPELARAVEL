@@ -92,7 +92,8 @@ Route::prefix('paginaprincipal')->group(function () {
 });
 
 
-Route::prefix('administracion')->group(function () { 
+Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
+//Route::prefix('administracion')->group(function () { 
 
     Route::get('/lusuarioscombobx', [AdministracionController::class, 'listarusuarioscombox']); 
     Route::get('/lplanescombox', [AdministracionController::class, 'listarplanescombox']); 
