@@ -924,6 +924,71 @@ class AdministracionController extends Controller
     }
 
 
+    // ✅ CRUD MODULO UBICACIONES
+    public function listarUbicaciones()
+    {
+        return response()->json(AdministracionModel::listarUbicaciones());
+    }
+
+    public function registrarUbicacion(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:255|unique:ubicaciones,nombre',
+                'is_active' => 'boolean'
+            ]);
+
+            $id = AdministracionModel::registrarUbicacion($validated);
+
+            $this->registrarBitacora('Crear', 'ubicaciones', $id, 'Se registró la ubicación: ' . $validated['nombre']);
+
+            return response()->json(['message' => 'Ubicación registrada correctamente.'], 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al registrar la ubicación: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function actualizarUbicacion(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:255|unique:ubicaciones,nombre,' . $id,
+                'is_active' => 'boolean'
+            ]);
+
+            AdministracionModel::actualizarUbicacion($id, $validated);
+
+            $this->registrarBitacora('Actualizar', 'ubicaciones', $id, 'Se actualizó la ubicación: ' . $validated['nombre']);
+
+            return response()->json(['message' => 'Ubicación actualizada correctamente.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al actualizar la ubicación: ' . $e->getMessage()], 500);
+        }
+    }
+  
+    public function cambiarUbicacion($id, Request $request)
+    {
+        try {
+            $validated = $request->validate(['is_active' => 'required|boolean']);
+
+            AdministracionModel::cambiarUbicacion($id, $validated['is_active']);
+
+            $this->registrarBitacora('Actualizar', 'ubicaciones', $id, 'Se cambió el estado de la ubicación.');
+
+            return response()->json([
+                'estado' => 1,
+                'mensaje' => 'Estado actualizado correctamente.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Error al cambiar el estado.',
+                'detalle' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
     // ✅ CRUD MODULO BITACORA
     public function listarbitacora()
     {

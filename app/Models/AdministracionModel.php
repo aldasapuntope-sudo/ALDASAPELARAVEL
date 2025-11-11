@@ -395,6 +395,48 @@ class AdministracionModel extends Model
             ]);
     }
 
+ 
+
+    // ✅ CRUD MODULO UBICACIONES
+    public static function listarUbicaciones()
+    {
+        return DB::table('ubicaciones')
+            ->orderBy('id', 'asc')
+            ->get();
+    }
+
+    public static function registrarUbicacion($data)
+    {
+        return DB::table('ubicaciones')->insertGetId([
+            'nombre' => $data['nombre'],
+            'is_active' => $data['is_active'] ?? 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    public static function actualizarUbicacion($id, $data)
+    {
+        return DB::table('ubicaciones')
+            ->where('id', $id)
+            ->update([
+                'nombre' => $data['nombre'],
+                'is_active' => $data['is_active'] ?? 1,
+                'updated_at' => now(),
+            ]);
+    } 
+
+    public static function cambiarUbicacion($id, $isActive)
+    {
+        return DB::table('ubicaciones')
+            ->where('id', $id)
+            ->update([
+                'is_active' => $isActive,
+                'updated_at' => now(),
+            ]);
+    }
+
+
 
     // CRUD MODULO BITACORA
     public static function listarbitacora()

@@ -27,6 +27,14 @@ class AnunciosController extends Controller
     }
 
 
+    public function getanunciosFavoritos($id)
+    {
+        $resultado = AnunciosModel::getanunciosFavoritos($id);
+        return response()->json($resultado);
+    }
+
+
+
     public function sumarVisita($id)
     {
         $resultado = AnunciosModel::sumarVisita($id);

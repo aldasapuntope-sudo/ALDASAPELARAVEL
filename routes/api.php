@@ -34,7 +34,8 @@ Route::prefix('miperfil')->group(function () {
     Route::put('/actualizar/{id}', [UsuarioController::class, 'actualizarperfil']); 
 });
 
-Route::prefix('misanuncios')->group(function () {
+Route::prefix('misanuncios')->middleware('auth:sanctum')->group(function () {
+//Route::prefix('misanuncios')->group(function () {
     Route::get('/lplanos/{id}', [AnunciosController::class, 'listarplanos']); 
     Route::delete('/eplanos/{id}', [AnunciosController::class, 'eliminarplanos']);
     Route::get('/limagenesecundarias/{id}', [AnunciosController::class, 'listaimgsecundarias']); 
@@ -50,8 +51,9 @@ Route::prefix('misanuncios')->group(function () {
     Route::get('/caracteristicas-catalogoid/{id}', [AnunciosController::class, 'categoriasCatalogoid']); 
     Route::get('/propiedad_amenities/{tpropiedad}', [AnunciosController::class, 'amenities']); 
     Route::get('/propiedad_amenitiesid/{id}', [AnunciosController::class, 'amenitiesid']); 
-
+ 
     Route::get('/mensajes-anuncio/{id}', [AnunciosController::class, 'getMensajeanuncio']); 
+    Route::get('/anuncio-favoritos/{id}', [AnunciosController::class, 'getanunciosFavoritos']); 
     Route::get('/monedas', [AnunciosController::class, 'getmonedas']);
 });
 
@@ -153,6 +155,14 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
     Route::post('/rconfiguraciones', [AdministracionController::class, 'registrarconfiguracion']);
     Route::put('/aconfiguraciones/{id}', [AdministracionController::class, 'actualizarconfiguracion']);
     Route::put('/econfiguraciones/{id}/estado', [AdministracionController::class, 'cambiarConfiguracion']);
+
+
+    // ✅ CRUD MODULO UBICACIONES
+    Route::get('/lubicaciones', [AdministracionController::class, 'listarUbicaciones']);
+    Route::post('/rubicaciones', [AdministracionController::class, 'registrarUbicacion']);
+    Route::put('/aubicaciones/{id}', [AdministracionController::class, 'actualizarUbicacion']);
+    Route::put('/eubicaciones/{id}/estado', [AdministracionController::class, 'cambiarUbicacion']);
+
 
 
     //RUTA BITACORA

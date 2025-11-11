@@ -50,6 +50,34 @@ class AnunciosModel extends Model
         ", [$userId]);
     }
 
+    public static function getanunciosFavoritos($userId)
+    {
+        return DB::select("
+            SELECT 
+                f.id AS favorito_id,
+                p.id,
+                p.titulo AS propiedad_titulo,
+                p.imagen_principal AS propiedad_imagen,
+                p.direccion AS ubicacion,
+                p.precio,
+                p.area,
+                p.dormitorios,
+                p.banos,
+                p.is_active_publish,
+                p.is_active,
+                p.created_at,
+                P.visitas,
+                ubi.nombre as ubicacion
+            FROM favoritos f
+            INNER JOIN propiedades p ON f.anuncio_id = p.id
+            INNER JOIN ubicaciones ubi ON p.ubicacion_id = ubi.id
+            WHERE f.usuario_id = ?
+            ORDER BY f.id DESC
+        ", [$userId]);
+    }
+
+
+
 
     public static function sumarVisita($id)
     {
@@ -303,7 +331,8 @@ class AnunciosModel extends Model
                 p.moneda_id,
                 p.direccion,
                 p.imagen_principal, 
-                p.is_active_publish 
+                p.is_active_publish,
+                p.visitas
             FROM propiedades p 
             INNER JOIN ubicaciones u ON p.ubicacion_id = u.id 
             INNER JOIN tipos_propiedad tp ON p.tipo_id = tp.id 
