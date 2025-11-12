@@ -69,7 +69,7 @@ class MenuController extends Controller
 
 
         // Construir dinámicamente las secciones por operación
-        $menu = [];
+        $menu = []; 
 
         foreach ($operaciones as $operacion) {
             $nombreOperacion = strtolower($operacion->nombre); // ejemplo: "comprar", "alquiler", etc.
