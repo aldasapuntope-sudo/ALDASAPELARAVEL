@@ -814,6 +814,14 @@ class AnunciosController extends Controller
     }
 
 
+    public function getpublicatuanuncio()
+    {
+        $resultado = AnunciosModel::getpagina('publica-tu-aviso');
+        return response()->json($resultado);
+    }
+    
+
+
     public function getpoliticaprivacidad()
     {
         $resultado = AnunciosModel::getpagina('politica-privacidad');

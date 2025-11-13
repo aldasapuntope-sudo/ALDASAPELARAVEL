@@ -83,8 +83,8 @@ class MenuController extends Controller
 
         // Agregar sección de servicios fija
         $menu['servicios'] = [
-            ['nombre' => 'Publica tu inmueble', 'url' => 'https://aldasa.pe/publica-tu-aviso'],
-            ['nombre' => 'Revista Aldasa', 'url' => 'https://aldasa.pe/revista-aldasa'],
+            ['nombre' => 'Publica tu inmueble', 'url' => 'publica-tu-aviso'],
+            ['nombre' => 'Revista Aldasa', 'url' => 'revista-aldasa'],
         ];
 
         return response()->json($menu);

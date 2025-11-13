@@ -84,6 +84,7 @@ Route::prefix('paginaprincipal')->group(function () {
     Route::get('/nosotros', [AnunciosController::class, 'getNosotros']);
     
     Route::get('/terminos-condiciones', [AnunciosController::class, 'gettermcondiciones']);
+    Route::get('/publica-tu-anuncio', [AnunciosController::class, 'getpublicatuanuncio']);
     Route::get('/politicas-privacidad', [AnunciosController::class, 'getpoliticaprivacidad']);
     Route::get('/lugares-mas-buscados', [AdministracionController::class, 'obtenerLugaresMasBuscados']);
     
