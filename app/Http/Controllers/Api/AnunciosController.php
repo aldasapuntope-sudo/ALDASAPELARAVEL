@@ -893,6 +893,32 @@ class AnunciosController extends Controller
 
 
 
+    public function actualizarvendido(Request $request, $id)
+    {
+        try {
+            // Validar
+            $request->validate([
+                'vendido' => 'required|boolean'
+            ]);
+
+            // Convertir estado: true = 2 (vendido), false = 1 (activo)
+            $nuevoEstado = $request->vendido ? 2 : 1;
+
+            // Llamada al modelo encargado
+            $resultado = AnunciosModel::actualizarEstadoVendido($id, $nuevoEstado);
+
+            if (!$resultado) {
+                return response()->json(['message' => 'No encontrado'], 404);
+            }
+
+            return response()->json(['message' => 'Estado actualizado correctamente']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+
+
 
 
 

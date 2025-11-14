@@ -328,15 +328,17 @@ class AnunciosModel extends Model
                 p.titulo, 
                 p.descripcion,
                 p.precio,
+                m.simbolo AS moneda_simbolo,
                 p.moneda_id,
                 p.direccion,
                 p.imagen_principal, 
-                p.is_active_publish,
-                p.visitas
+                p.visitas,
+                p.is_active_publish
             FROM propiedades p 
             INNER JOIN ubicaciones u ON p.ubicacion_id = u.id 
             INNER JOIN tipos_propiedad tp ON p.tipo_id = tp.id 
             INNER JOIN operaciones o ON p.operacion_id = o.id 
+            INNER JOIN monedas m ON p.moneda_id = m.id
             WHERE p.is_active = 1 
             AND p.is_active_publish = $idpublish 
             AND p.user_id = $id 
@@ -666,5 +668,15 @@ class AnunciosModel extends Model
         DB::table('favoritos')->insert($data);
 
         return $data;
+    }
+
+    public static function actualizarEstadoVendido($id, $estado)
+    {
+        return DB::table('propiedades')
+            ->where('id', $id)
+            ->update([
+                'is_active_publish' => $estado,
+                'updated_at' => now()
+            ]);
     }
 }

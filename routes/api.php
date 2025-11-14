@@ -55,6 +55,8 @@ Route::prefix('misanuncios')->middleware('auth:sanctum')->group(function () {
     Route::get('/mensajes-anuncio/{id}', [AnunciosController::class, 'getMensajeanuncio']); 
     Route::get('/anuncio-favoritos/{id}', [AnunciosController::class, 'getanunciosFavoritos']); 
     Route::get('/monedas', [AnunciosController::class, 'getmonedas']);
+
+    Route::post('/vendido/{id}', [AnunciosController::class, 'actualizarvendido']); 
 });
 
 Route::prefix('planes')->group(function () { 
