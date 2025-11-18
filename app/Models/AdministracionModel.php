@@ -15,6 +15,13 @@ class AdministracionModel extends Model
     }
 
 
+    public static function obtenersliders()
+    {
+        return DB::select("SELECT * FROM sliders");
+    }
+
+    
+
     public static function listarplanescombox()
     {
         return DB::select('SELECT * FROM planes');
@@ -445,5 +452,47 @@ class AdministracionModel extends Model
             ->orderBy('id', 'asc')
             ->get();
     }
+
+
+    public static function listarSliders()
+    {
+        return DB::table('sliders')
+            ->orderBy('id', 'desc')
+            ->get();
+    }
+
+    public static function registrarSlider($data)
+    {
+        return DB::table('sliders')->insertGetId([
+            'titulo' => $data['titulo'],
+            'descripcion' => $data['descripcion'] ?? null,
+            'imagen_url' => $data['imagen_url'],
+            'orden' => $data['orden'] ?? 0,
+            'is_active' => $data['is_active'] ?? 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    public static function obtenerSliderPorId($id)
+    {
+        return DB::table('sliders')->where('id', $id)->first();
+    }
+
+    public static function actualizarSlider($id, $data, $rutaImagen)
+    {
+        return DB::table('sliders')
+            ->where('id', $id)
+            ->update([
+                'titulo' => $data['titulo'],
+                'descripcion' => $data['descripcion'] ?? null,
+                'imagen_url' => $rutaImagen,
+                'orden' => $data['orden'],
+                'is_active' => $data['is_active'] ?? 1,
+                'updated_at' => now(),
+            ]);
+    }
+
+
 
 }

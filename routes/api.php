@@ -66,6 +66,7 @@ Route::prefix('planes')->group(function () {
 
 
 Route::prefix('paginaprincipal')->group(function () { 
+    Route::get('/sliders', [AdministracionController::class, 'obtenersliders']);
     Route::get('/obtener-configuraciones', [AdministracionController::class, 'obtenerConfiguraciones']);
     Route::get('/tipos-operacion', [AnunciosController::class, 'tiposOperacion']); 
     Route::get('/tipos-propiedad', [AnunciosController::class, 'tiposPropiedad']);
@@ -167,6 +168,12 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
     Route::put('/eubicaciones/{id}/estado', [AdministracionController::class, 'cambiarUbicacion']);
 
 
+
+    // CRUD MODULO SLIDER
+    Route::get('/sliders', [AdministracionController::class, 'listarSliders']);
+    Route::post('/rslider', [AdministracionController::class, 'registrarSlider']);
+    Route::put('/aslider/{id}', [AdministracionController::class, 'actualizarSlider']);
+    Route::put('/eslider/{id}/estado', [AdministracionController::class, 'cambiarEstadoSlider']);
 
     //RUTA BITACORA
     Route::get('/lbitacora', [AdministracionController::class, 'listarbitacora']);
