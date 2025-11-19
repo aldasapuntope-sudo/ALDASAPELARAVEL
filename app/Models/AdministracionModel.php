@@ -495,4 +495,47 @@ class AdministracionModel extends Model
 
 
 
+    //CRUD MODULO POPUPS
+
+    public static function listarPopups()
+    {
+        return DB::table('popups')
+            ->orderBy('id', 'desc')
+            ->get();
+    }
+
+    public static function registrarPopups($data)
+    {
+        return DB::table('popups')->insertGetId([
+            'titulo' => $data['titulo'],
+            'descripcion' => $data['descripcion'] ?? null,
+            'imagen_url' => $data['imagen_url'],
+            'orden' => $data['orden'] ?? 0,
+            'is_active' => $data['is_active'] ?? 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    public static function obtenerPopupsPorId($id)
+    {
+        return DB::table('popups')->where('id', $id)->first();
+    }
+
+    public static function actualizarPopups($id, $data, $rutaImagen)
+    {
+        return DB::table('popups')
+            ->where('id', $id)
+            ->update([
+                'titulo' => $data['titulo'],
+                'descripcion' => $data['descripcion'] ?? null,
+                'imagen_url' => $rutaImagen,
+                'orden' => $data['orden'],
+                'is_active' => $data['is_active'] ?? 1,
+                'updated_at' => now(),
+            ]);
+    }
+
+
+
 }

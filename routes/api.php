@@ -95,6 +95,9 @@ Route::prefix('paginaprincipal')->group(function () {
     Route::get('/favoritos/existe/{userid}/{anuncioid}', [AnunciosController::class, 'existeFavorito']); 
     Route::post('/favoritos/guardar', [AnunciosController::class, 'registrarfavoritos']); 
     Route::post('/favoritos/eliminar', [AnunciosController::class, 'eliminarfavoritos']); 
+
+    // CRUD MODULO ANUNCIO POPUP
+    Route::get('/lpopups', [AdministracionController::class, 'listarPopups']);
 });
 
 
@@ -174,6 +177,13 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
     Route::post('/rslider', [AdministracionController::class, 'registrarSlider']);
     Route::put('/aslider/{id}', [AdministracionController::class, 'actualizarSlider']);
     Route::put('/eslider/{id}/estado', [AdministracionController::class, 'cambiarEstadoSlider']);
+
+
+    Route::get('/lpopups', [AdministracionController::class, 'listarPopups']);
+    Route::post('/rpopups', [AdministracionController::class, 'registrarPopups']);
+    Route::put('/apopups/{id}', [AdministracionController::class, 'actualizarPopups']);
+    Route::put('/epopups/{id}/estado', [AdministracionController::class, 'cambiarEstadoPopups']);
+
 
     //RUTA BITACORA
     Route::get('/lbitacora', [AdministracionController::class, 'listarbitacora']);

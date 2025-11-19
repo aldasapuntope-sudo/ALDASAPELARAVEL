@@ -1125,4 +1125,127 @@ class AdministracionController extends Controller
         }
     }
 
+
+    //CRUD MODULO POPPUS
+    public function listarPopups()
+    {
+        return response()->json(AdministracionModel::listarPopups());
+    }
+
+    public function registrarPopups(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'titulo' => 'required|string|max:255',
+                'descripcion' => 'nullable|string',
+                'orden' => 'nullable|integer|min:0',
+                'is_active' => 'boolean',
+                'imagen_url' => 'required|file|mimes:jpg,jpeg,png,webp',
+            ]);
+
+            // Procesar imagen
+            $archivo = $request->file('imagen_url');
+            $nombre = 'slider_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+
+            $directorio = 'C:/xampp/htdocs/popups';
+            if (!file_exists($directorio)) mkdir($directorio, 0777, true);
+
+            $archivo->move($directorio, $nombre);
+
+            // Ruta almacenada en BD
+            $rutaImagen = 'popups/' . $nombre;
+
+            // Agregar ruta al array validado
+            $validated['imagen_url'] = $rutaImagen;
+
+            // Registrar slider
+            $id = AdministracionModel::registrarPopups($validated);
+
+            // Bitácora
+            $this->registrarBitacora('Crear', 'popups', $id, 'Se registró slider: ' . $validated['titulo']);
+
+            return response()->json(['message' => 'Slider registrado correctamente'], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al registrar slider: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function actualizarPopups(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'titulo' => 'required|string|max:255',
+                'descripcion' => 'nullable|string',
+                'orden' => 'nullable|integer|min:0',
+                'is_active' => 'boolean',
+                'imagen_url' => 'nullable|file|mimes:jpg,jpeg,png,webp'
+            ]);
+
+            // Obtener slider actual
+            $sliderActual = AdministracionModel::obtenerPopupsPorId($id);
+
+            if (!$sliderActual) {
+                return response()->json(['error' => 'Slider no encontrado'], 404);
+            }
+
+            // Si viene una nueva imagen → procesar
+            if ($request->hasFile('imagen_url')) {
+
+                $archivo = $request->file('imagen_url');
+                $nombre = 'slider_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+
+                $directorio = 'C:/xampp/htdocs/popups';
+                if (!file_exists($directorio)) mkdir($directorio, 0777, true);
+
+                $archivo->move($directorio, $nombre);
+
+                $rutaImagen = 'popups/' . $nombre;
+
+            } else {
+
+                // ❗ NO actualizar la imagen → mantener la actual
+                $rutaImagen = $sliderActual->imagen_url;
+            }
+
+            AdministracionModel::actualizarPopups($id, $validated, $rutaImagen);
+
+            $this->registrarBitacora(
+                'Actualizar',
+                'sliders',
+                $id,
+                'Se actualizó el slider: ' . $validated['titulo']
+            );
+
+            return response()->json(['message' => 'Slider actualizado correctamente'], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al actualizar slider: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+
+    public function cambiarEstadoPopups($id, Request $request)
+    {
+        try {
+            $validated = $request->validate(['is_active' => 'required|boolean']);
+
+            DB::table('popups')
+                ->where('id', $id)
+                ->update(['is_active' => $validated['is_active'], 'updated_at' => now()]);
+
+            $this->registrarBitacora('Actualizar', 'sliders', $id, 'Se cambió el estado del slider.');
+
+            return response()->json(['estado' => 1, 'mensaje' => 'Estado actualizado correctamente.']);
+        } catch (\Exception $e) {
+            return response()->json(['estado' => 0, 'mensaje' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+
 }
