@@ -30,6 +30,17 @@ class AdministracionController extends Controller
     }
 
 
+    public function listarperfilescombox()
+    {
+        return response()->json(AdministracionModel::listarperfilescombox());
+    }
+
+    public function listardocumentoscombox()
+    {
+        return response()->json(AdministracionModel::listardocumentoscombox());
+    }
+
+
     
     public function listarplanescombox()
     {
@@ -1247,5 +1258,156 @@ class AdministracionController extends Controller
             return response()->json(['estado' => 0, 'mensaje' => 'Error: ' . $e->getMessage()], 500);
         }
     }
+
+
+
+    //CRUD MODULO USUARIOS
+    public function listarUsuarios()
+    {
+        return response()->json(AdministracionModel::listarUsuarios());
+    }
+
+    public function registrarUsuarios(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'perfil_id' => 'required|integer',
+                'nombre' => 'required|string|max:255',
+                'apellido' => 'nullable|string|max:255',
+                'razon_social' => 'nullable|string|max:255',
+                'email' => 'required|email|unique:usuario,email',
+                'password' => 'nullable|string|min:6',
+                'tipo_documento_id' => 'required|integer',
+                'numero_documento' => 'required|string|unique:usuario,numero_documento',
+                'telefono' => 'nullable|string|max:255',
+                'telefono_movil' => 'nullable|string|max:255',
+                'is_active' => 'boolean',
+            ]);
+
+            // Si no envía contraseña → generar una por defecto
+            $validated['password'] = !empty($validated['password'])
+                ? bcrypt($validated['password'])
+                : bcrypt('123456');
+
+            $id = AdministracionModel::registrarUsuarios($validated);
+
+            return response()->json(['message' => 'Usuario registrado correctamente'], 201);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+
+
+    public function actualizarUsuarios(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'perfil_id' => 'required|integer',
+                'nombre' => 'required|string|max:255',
+                'apellido' => 'nullable|string|max:255',
+                'razon_social' => 'nullable|string|max:255',
+                'email' => 'required|email|unique:usuario,email,' . $id,
+                'password' => 'nullable|string|min:6',
+                'tipo_documento_id' => 'required|integer',
+                'numero_documento' => 'required|string|unique:usuario,numero_documento,' . $id,
+                'telefono' => 'nullable|string|max:255',
+                'telefono_movil' => 'nullable|string|max:255',
+                'is_active' => 'boolean',
+            ]);
+
+            $usuarioActual = AdministracionModel::obtenerUsuarioPorId($id);
+
+            if (!$usuarioActual) {
+                return response()->json(['error' => 'Usuario no encontrado'], 404);
+            }
+
+            // Mantener la contraseña si viene vacía
+            $validated['password'] = !empty($validated['password'])
+                ? bcrypt($validated['password'])
+                : $usuarioActual->password;
+
+            AdministracionModel::actualizarUsuarios($id, $validated);
+
+            return response()->json(['message' => 'Usuario actualizado correctamente'], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+
+
+    public function cambiarEstadoUsuarios($id, Request $request)
+    {
+        try {
+            $validated = $request->validate(['is_active' => 'required|boolean']);
+
+            DB::table('usuario')
+                ->where('id', $id)
+                ->update([
+                    'is_active' => $validated['is_active'],
+                    'updated_at' => now()
+                ]);
+
+            $this->registrarBitacora('Actualizar', 'usuarios', $id, 'Se cambió el estado del usuario.');
+
+            return response()->json(['estado' => 1, 'mensaje' => 'Estado actualizado correctamente.']);
+
+        } catch (\Exception $e) {
+            return response()->json(['estado' => 0, 'mensaje' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+
+
+    public function subirperfilusuario(Request $request, $id)
+    {
+        try {
+            // Validar solo imagen
+            $validated = $request->validate([
+                'imagen' => 'nullable|file|mimes:jpg,jpeg,png,webp'
+            ]);
+
+            // Obtener usuario actual
+            $usuario = AdministracionModel::obtenerUsuarioPorId($id);
+
+            if (!$usuario) {
+                return response()->json(['error' => 'Usuario no encontrado'], 404);
+            }
+
+            // Si viene nueva imagen → procesar
+            if ($request->hasFile('imagen')) {
+
+                $archivo = $request->file('imagen');
+                $nombre = 'perfil_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+
+                $directorio = 'C:/xampp/htdocs/perfiles';
+                if (!file_exists($directorio)) mkdir($directorio, 0777, true);
+
+                $archivo->move($directorio, $nombre);
+
+                $rutaImagen = 'perfiles/' . $nombre;
+
+            } else {
+                // Mantener imagen actual
+                $rutaImagen = $usuario->imagen;
+            }
+
+            // Actualizar solo la imagen en BD
+            AdministracionModel::actualizarImagenUsuario($id, $rutaImagen);
+
+            return response()->json([
+                'exito' => true,
+                'message' => 'Imagen de perfil actualizada correctamente',
+                'imagen' => $rutaImagen
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'exito' => false,
+                'error' => 'Error al actualizar la imagen: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
 
 }

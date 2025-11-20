@@ -66,6 +66,7 @@ Route::prefix('planes')->group(function () {
 
 
 Route::prefix('paginaprincipal')->group(function () { 
+    Route::post('/actualizar-perfil/{id}', [AdministracionController::class, 'subirperfilusuario']);
     Route::get('/sliders', [AdministracionController::class, 'obtenersliders']);
     Route::get('/obtener-configuraciones', [AdministracionController::class, 'obtenerConfiguraciones']);
     Route::get('/tipos-operacion', [AnunciosController::class, 'tiposOperacion']); 
@@ -106,7 +107,8 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
 
     Route::get('/lusuarioscombobx', [AdministracionController::class, 'listarusuarioscombox']); 
     Route::get('/lplanescombox', [AdministracionController::class, 'listarplanescombox']); 
-
+    Route::get('/lperfilescombox', [AdministracionController::class, 'listarperfilescombox']); 
+    Route::get('/ltipodocumentoscombox', [AdministracionController::class, 'listardocumentoscombox']); 
     //RUTA DE PLANES
     Route::get('/lplanes', [AdministracionController::class, 'listarPlanes']); 
     Route::put('/aplanes/{id}', [AdministracionController::class, 'actualizarPlanes']); 
@@ -184,6 +186,11 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
     Route::put('/apopups/{id}', [AdministracionController::class, 'actualizarPopups']);
     Route::put('/epopups/{id}/estado', [AdministracionController::class, 'cambiarEstadoPopups']);
 
+    //CRUD MODULO USUARIO
+    Route::get('/lusuarios', [AdministracionController::class, 'listarUsuarios']);
+    Route::post('/rusuarios', [AdministracionController::class, 'registrarUsuarios']);
+    Route::put('/ausuarios/{id}', [AdministracionController::class, 'actualizarUsuarios']);
+    Route::put('/eusuarios/{id}/estado', [AdministracionController::class, 'cambiarEstadoUsuarios']);
 
     //RUTA BITACORA
     Route::get('/lbitacora', [AdministracionController::class, 'listarbitacora']);

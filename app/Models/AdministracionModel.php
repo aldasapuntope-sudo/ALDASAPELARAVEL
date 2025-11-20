@@ -9,6 +9,17 @@ class AdministracionModel extends Model
 {
     
 
+    public static function listarperfilescombox()
+    {
+        return DB::select("SELECT * FROM perfiles");
+    }
+
+    public static function listardocumentoscombox()
+    {
+        return DB::select("SELECT * FROM tipos_documento");
+    }
+
+
     public static function listarusuarioscombox()
     {
         return DB::select("SELECT id, CONCAT(nombre, ' ', apellido) AS nombre_completo FROM usuario");
@@ -19,6 +30,7 @@ class AdministracionModel extends Model
     {
         return DB::select("SELECT * FROM sliders");
     }
+    
 
     
 
@@ -535,6 +547,73 @@ class AdministracionModel extends Model
                 'updated_at' => now(),
             ]);
     }
+
+
+    //CRUD MODULO USUARIOS
+    public static function listarUsuarios()
+    {
+        return DB::table('usuario')
+            ->orderBy('id', 'desc')
+            ->get();
+    }
+
+    public static function registrarUsuarios($data)
+    {
+        return DB::table('usuario')->insertGetId([
+            'perfil_id' => $data['perfil_id'],
+            'nombre' => $data['nombre'],
+            'apellido' => $data['apellido'],
+            'razon_social' => $data['razon_social'],
+            'email' => $data['email'],
+            'password' => $data['password'],
+            'tipo_documento_id' => $data['tipo_documento_id'],
+            'numero_documento' => $data['numero_documento'],
+            'telefono' => $data['telefono'],
+            'telefono_movil' => $data['telefono_movil'],
+            'is_active' => $data['is_active'] ?? 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+
+    public static function obtenerUsuarioPorId($id)
+    {
+        return DB::table('usuario')->where('id', $id)->first();
+    }
+
+    public static function actualizarUsuarios($id, $data)
+    {
+        return DB::table('usuario')
+            ->where('id', $id)
+            ->update([
+                'perfil_id' => $data['perfil_id'],
+                'nombre' => $data['nombre'],
+                'apellido' => $data['apellido'],
+                'razon_social' => $data['razon_social'],
+                'email' => $data['email'],
+                'password' => $data['password'],
+                'tipo_documento_id' => $data['tipo_documento_id'],
+                'numero_documento' => $data['numero_documento'],
+                'telefono' => $data['telefono'],
+                'telefono_movil' => $data['telefono_movil'],
+                'is_active' => $data['is_active'] ?? 1,
+                'updated_at' => now(),
+            ]);
+    }
+
+
+    public static function actualizarImagenUsuario($id, $rutaImagen)
+    {
+        return DB::table('usuario')
+            ->where('id', $id)
+            ->update([
+                'imagen' => $rutaImagen
+            ]);
+    }
+
+
+
 
 
 
