@@ -192,6 +192,12 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
     Route::put('/ausuarios/{id}', [AdministracionController::class, 'actualizarUsuarios']);
     Route::put('/eusuarios/{id}/estado', [AdministracionController::class, 'cambiarEstadoUsuarios']);
 
+    //CRUD MODULO CONFIGURACIONES SCRIPTS
+    Route::get('/lscripts', [AdministracionController::class, 'listarScripts']);
+    Route::post('/rscripts', [AdministracionController::class, 'registrarScripts']);
+    Route::put('/ascripts/{id}', [AdministracionController::class, 'actualizarScripts']);
+    Route::put('/escripts/{id}/estado', [AdministracionController::class, 'cambiarEstadoScripts']);
+
     //RUTA BITACORA
     Route::get('/lbitacora', [AdministracionController::class, 'listarbitacora']);
 });
@@ -203,3 +209,4 @@ Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']
 Route::post('/verify-reset-token', [PasswordResetController::class, 'verifyToken']);
 
 Route::get('/menus', [MenuController::class, 'index']);
+Route::get('/scripts', [AdministracionController::class, 'obtenerscripts']);

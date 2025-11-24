@@ -1410,4 +1410,71 @@ class AdministracionController extends Controller
     }
 
 
+    //CRUD MODELO CONFIGURACION SCRITS
+    public function obtenerscripts()
+    {
+        return response()->json(AdministracionModel::obtenerScripts());
+    }
+
+    public function listarScripts()
+    {
+        return response()->json(
+            AdministracionModel::listarScripts()
+        );
+    }
+
+    public function registrarScripts(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:255',
+                'script_head' => 'nullable|string',
+                'script_body' => 'nullable|string',
+                'is_active' => 'required|integer'
+            ]);
+            AdministracionModel::registrarScripts($validated);
+
+            return response()->json(['message' => 'Script registrado correctamente'], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function actualizarScripts(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:255',
+                'script_head' => 'nullable|string',
+                'script_body' => 'nullable|string',
+                'is_active' => 'required|integer'
+            ]);
+
+            AdministracionModel::actualizarScripts($id, $validated);
+
+            return response()->json(['message' => 'Script actualizado correctamente'], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function cambiarEstadoScripts(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'is_active' => 'required|integer'
+            ]);
+
+            AdministracionModel::cambiarEstadoScripts($id, $validated['is_active']);
+
+            return response()->json(['message' => 'Estado actualizado correctamente'], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+
 }

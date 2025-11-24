@@ -679,4 +679,5 @@ class AnunciosModel extends Model
                 'updated_at' => now()
             ]);
     }
+
 }

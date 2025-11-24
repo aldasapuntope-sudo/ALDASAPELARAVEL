@@ -613,6 +613,56 @@ class AdministracionModel extends Model
     }
 
 
+    //CRUD MODELO CONFIGURACION SCRITS
+    public static function obtenerScripts()
+    {
+        return DB::table('config_scripts')
+            ->where('is_active', 1)
+            ->first();
+    }
+
+    public static function listarScripts()
+    {
+        return DB::table('config_scripts')
+            ->orderBy('id', 'desc')
+            ->get();
+    }
+
+    public static function registrarScripts($data)
+    {
+        return DB::table('config_scripts')->insert([
+            'nombre' => $data['nombre'],
+            'script_head' => $data['script_head'],
+            'script_body' => $data['script_body'],
+            'is_active' => $data['is_active'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    public static function actualizarScripts($id, $data)
+    {
+        return DB::table('config_scripts')
+            ->where('id', $id)
+            ->update([
+                'nombre' => $data['nombre'],
+                'script_head' => $data['script_head'],
+                'script_body' => $data['script_body'],
+                'is_active' => $data['is_active'],
+                'updated_at' => now(),
+            ]);
+    }
+
+    public static function cambiarEstadoScripts($id, $estado)
+    {
+        return DB::table('config_scripts')
+            ->where('id', $id)
+            ->update([
+                'is_active' => $estado,
+                'updated_at' => now(),
+            ]);
+    }
+
 
 
 
