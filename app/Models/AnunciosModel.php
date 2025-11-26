@@ -66,7 +66,7 @@ class AnunciosModel extends Model
                 p.is_active_publish,
                 p.is_active,
                 p.created_at,
-                P.visitas,
+                p.visitas,
                 ubi.nombre as ubicacion
             FROM favoritos f
             INNER JOIN propiedades p ON f.anuncio_id = p.id

@@ -1143,6 +1143,24 @@ class AdministracionController extends Controller
         return response()->json(AdministracionModel::listarPopups());
     }
 
+    public function listarcolor()
+    {
+        return response()->json(AdministracionModel::listarcolor());
+    }
+
+
+    public function getPopupConfig()
+    {
+        return response()->json(AdministracionModel::getPopupConfig());
+    }
+
+    public function listarPopups2()
+    {
+        return response()->json(AdministracionModel::listarPopups2());
+    }
+
+    
+
     public function registrarPopups(Request $request)
     {
         try {

@@ -99,6 +99,9 @@ Route::prefix('paginaprincipal')->group(function () {
 
     // CRUD MODULO ANUNCIO POPUP
     Route::get('/lpopups', [AdministracionController::class, 'listarPopups']);
+    Route::get('/popup-config', [AdministracionController::class, 'getPopupConfig']);
+    Route::get('/color', [AdministracionController::class, 'listarcolor']);
+
 });
 
 
@@ -181,7 +184,7 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
     Route::put('/eslider/{id}/estado', [AdministracionController::class, 'cambiarEstadoSlider']);
 
 
-    Route::get('/lpopups', [AdministracionController::class, 'listarPopups']);
+    Route::get('/lpopups2', [AdministracionController::class, 'listarPopups2']);
     Route::post('/rpopups', [AdministracionController::class, 'registrarPopups']);
     Route::put('/apopups/{id}', [AdministracionController::class, 'actualizarPopups']);
     Route::put('/epopups/{id}/estado', [AdministracionController::class, 'cambiarEstadoPopups']);

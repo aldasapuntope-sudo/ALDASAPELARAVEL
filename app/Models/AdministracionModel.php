@@ -413,6 +413,7 @@ class AdministracionModel extends Model
                 'updated_at' => now(),
             ]);
     }
+    
 
  
 
@@ -512,6 +513,29 @@ class AdministracionModel extends Model
     public static function listarPopups()
     {
         return DB::table('popups')
+            ->where('is_active', 1)
+            ->orderBy('id', 'desc')
+            ->get();
+    }
+
+    public static function listarcolor()
+    {
+        return DB::table('configuraciones')
+            ->where('clave', 'colorprimario')
+            ->where('is_active', 1)
+            ->get();
+    }
+
+    public static function listarPopups2()
+    {
+        return DB::table('popups')
+            ->orderBy('id', 'desc')
+            ->get();
+    }
+
+    public static function getPopupConfig()
+    {
+        return DB::table('popup_config')
             ->orderBy('id', 'desc')
             ->get();
     }
