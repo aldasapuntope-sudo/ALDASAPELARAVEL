@@ -86,7 +86,8 @@ Route::prefix('paginaprincipal')->group(function () {
     Route::get('/propiedades/relacionadas/{tipo_id}/{id}', [AnunciosController::class, 'getRelacionadas']);
     Route::get('/quienes-somos', [AnunciosController::class, 'getQuienessomos']);
     Route::get('/nosotros', [AnunciosController::class, 'getNosotros']);
-    
+    Route::get('/club', [AnunciosController::class, 'getClub']);
+    Route::get('/inversiones', [AnunciosController::class, 'getInversiones']);
     Route::get('/terminos-condiciones', [AnunciosController::class, 'gettermcondiciones']);
     Route::get('/publica-tu-anuncio', [AnunciosController::class, 'getpublicatuanuncio']);
     Route::get('/politicas-privacidad', [AnunciosController::class, 'getpoliticaprivacidad']);
@@ -203,6 +204,10 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
 
     //RUTA BITACORA
     Route::get('/lbitacora', [AdministracionController::class, 'listarbitacora']);
+
+    //CRUD MODULO POPUPS CONFIGURACION
+    Route::get('/lpopupconfig', [AdministracionController::class, 'listarPopupConfig']);
+    Route::put('/apopupconfig/{id}', [AdministracionController::class, 'actualizarPopupConfig']);
 });
 
 

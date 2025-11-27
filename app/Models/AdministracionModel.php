@@ -323,6 +323,7 @@ class AdministracionModel extends Model
     // Registrar página
     public static function registrarpaginas($data, $rutaImagen)
     {
+        
         return DB::table('paginas')->insertGetId([
             'slug' => $data['slug'],
             'titulo' => $data['titulo'],
@@ -339,6 +340,7 @@ class AdministracionModel extends Model
     // Actualizar página
     public static function actualizarpaginas($id, $data, $rutaImagen)
     {
+        
         DB::table('paginas')
             ->where('id', $id)
             ->update([

@@ -807,6 +807,18 @@ class AnunciosController extends Controller
         return response()->json($resultado);
     }
 
+    public function getInversiones()
+    {
+        $resultado = AnunciosModel::getpagina('inversionesaldasa');
+        return response()->json($resultado);
+    }
+    
+    public function getClub()
+    {
+        $resultado = AnunciosModel::getpagina('clubaldasa');
+        return response()->json($resultado);
+    }
+
     public function gettermcondiciones()
     {
         $resultado = AnunciosModel::getpagina('terminos-condiciones');

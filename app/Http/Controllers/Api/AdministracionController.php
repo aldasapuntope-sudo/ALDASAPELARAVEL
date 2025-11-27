@@ -734,6 +734,7 @@ class AdministracionController extends Controller
     public function actualizarpaginas(Request $request, $id)
     {
         try {
+            
             $validated = $request->validate([
                 'slug' => 'required|string|max:150',
                 'titulo' => 'required|string|max:255',
@@ -1493,6 +1494,27 @@ class AdministracionController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    //CRUD MODULO POPUPS CONFIGURACIONES
+    public function listarPopupConfig()
+    {
+        return DB::table('popup_config')->first();
+    }
+
+    public function actualizarPopupConfig(Request $request, $id)
+    {
+        $request->validate([
+            'tiempo_inicio_seg' => 'required|integer|min:1',
+        ]);
+
+        DB::table('popup_config')->where('id', $id)->update([
+            'tiempo_inicio_seg' => $request->tiempo_inicio_seg,
+            'updated_at' => now(),
+        ]);
+
+        return response()->json(['message' => 'Configuración actualizada']);
+    }
+
 
 
 }
