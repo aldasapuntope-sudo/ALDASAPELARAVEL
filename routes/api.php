@@ -211,6 +211,16 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
 });
 
 
+Route::prefix('inversiones')->group(function () {
+//Route::prefix('inversiones')->middleware('auth:sanctum')->group(function () {
+//Route::prefix('misanuncios')->group(function () {
+    Route::get('/mis-proyectos/{id}', [AnunciosController::class, 'getmisproyectosid']); 
+    Route::get('/mis-proyectos', [AnunciosController::class, 'getmisproyectos']); 
+
+    Route::get('/proyectos/detalle/{id}', [AnunciosController::class, 'getProyectoDetalle']); 
+});
+
+
 Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink']);
 Route::get('/reset-password/{token}', [PasswordResetController::class, 'validateToken']);
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);

@@ -931,7 +931,24 @@ class AnunciosController extends Controller
 
 
 
+    //MIS PROYECTOS INVERSIONES
+    public function getmisproyectos()
+    {
+        $resultado = AnunciosModel::getMisProyectos();
+        return response()->json($resultado);
+    }
 
+    public function getmisproyectosid($userId)
+    {
+        $resultado = AnunciosModel::getProyectoPermitido($userId);
+        return response()->json($resultado);
+    }
+
+
+    public function getProyectoDetalle($id)
+    {
+        return response()->json(AnunciosModel::listarDetalleProyecto($id));
+    }
 
 
 }

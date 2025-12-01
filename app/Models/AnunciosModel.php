@@ -680,4 +680,140 @@ class AnunciosModel extends Model
             ]);
     }
 
+
+
+
+
+    //MI PROYECTO INVERSION
+
+    public static function getMisProyectos()
+    {
+        return DB::select("
+            SELECT 
+                p.id,
+                p.titulo,
+                p.descripcion,
+                p.ubicacion,
+                p.porcentaje_avance,
+                p.imagen_principal,
+                p.is_active,
+                u.name AS administrador
+            FROM proyectos_inversion p
+            INNER JOIN users u ON u.id = p.user_id
+            WHERE p.is_active = 1
+            ORDER BY p.id DESC
+        ");
+    }
+
+    /**
+     * Obtener el proyecto permitido para un usuario inversionista
+     */
+    public static function getProyectoPermitido($userId)
+    {
+        $fila = DB::selectOne("
+            SELECT proyecto_id, estado
+            FROM proyecto_inversionistas
+            WHERE interesado_id = ?
+            AND estado = 'aceptado'
+            LIMIT 1
+        ", [$userId]);
+
+        if ($fila) {
+            return $fila; // { proyecto_id: X, estado: "aceptado" }
+        }
+
+        return (object)[
+            'proyecto_id' => null,
+            'estado' => null
+        ];
+    }
+
+
+    public static function listarDetalleProyecto($id)
+    {
+        // 📌 1. Traer información principal del proyecto
+        $proyectos = DB::select("
+            SELECT 
+                p.id,
+                p.user_id,
+                u.nombre AS creador_nombre,
+                u.apellido AS creador_apellido,
+                u.email AS creador_email,
+                u.telefono AS creador_telefono,
+                p.titulo,
+                p.descripcion,
+                p.ubicacion,
+                p.porcentaje_avance,
+                p.imagen_principal,
+                p.is_active,
+                p.created_at
+            FROM proyectos_inversion p
+            INNER JOIN usuario u ON u.id = p.user_id
+            WHERE p.id = $id
+            LIMIT 1
+        ");
+
+        if (empty($proyectos)) {
+            return null;
+        }
+
+        $proyecto = $proyectos[0];
+
+        // 📌 2. Características
+        $proyecto->caracteristicas = DB::table('proyecto_caracteristicas')
+            ->select('id', 'titulo', 'descripcion')
+            ->where('proyecto_id', $id)
+            ->get();
+
+        // 📌 3. Multimedia (galería)
+        $proyecto->multimedia = DB::table('proyecto_multimedia')
+            ->select('id', 'tipo', 'archivo')
+            ->where('proyecto_id', $id)
+            ->get();
+
+        // 📌 4. Imagen Principal + Galería unificada
+        $imagenes = collect();
+
+        if (!empty($proyecto->imagen_principal)) {
+            $imagenes->push((object)[
+                'id' => 0,
+                'titulo' => 'Imagen principal',
+                'archivo' => $proyecto->imagen_principal,
+                'tipo' => 'imagen'
+            ]);
+        }
+
+        $imagenesGaleria = DB::table('proyecto_multimedia')
+            ->where('proyecto_id', $id)
+            ->where('tipo', 'imagen')
+            ->select('id', 'archivo', 'tipo')
+            ->get();
+
+        $proyecto->imagenes = $imagenes->merge($imagenesGaleria);
+
+        // 📌 5. Videos
+        $proyecto->videos = DB::table('proyecto_multimedia')
+            ->where('proyecto_id', $id)
+            ->where('tipo', 'video')
+            ->select('id', 'archivo', 'tipo')
+            ->get();
+
+        // 📌 6. Inversionistas asignados
+        $proyecto->inversionistas = DB::table('proyecto_inversionistas AS pi')
+            ->join('usuario AS u', 'pi.interesado_id', '=', 'u.id')
+            ->select(
+                'pi.id',
+                'pi.estado',
+                'u.nombre',
+                'u.apellido',
+                'u.email',
+                'u.telefono'
+            )
+            ->where('pi.proyecto_id', $id)
+            ->get();
+
+        return $proyecto;
+    }
+
+
 }
