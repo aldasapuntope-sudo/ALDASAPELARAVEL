@@ -812,6 +812,20 @@ class AnunciosModel extends Model
             ->where('pi.proyecto_id', $id)
             ->get();
 
+        // 📌 7. Etapas del proyecto (ordenadas correctamente)
+        $proyecto->etapas = DB::table('proyecto_etapas')
+            ->select(
+                'id',
+                'nombre',
+                'descripcion',
+                'orden',
+                'completado',
+                'fecha_completado'
+            )
+            ->where('proyecto_id', $id)
+            ->orderBy('orden', 'asc')
+            ->get();
+
         return $proyecto;
     }
 
