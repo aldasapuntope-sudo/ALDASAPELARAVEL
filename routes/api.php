@@ -214,6 +214,7 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
 Route::prefix('inversiones')->group(function () {
 //Route::prefix('inversiones')->middleware('auth:sanctum')->group(function () {
 //Route::prefix('misanuncios')->group(function () {
+     Route::get('/usuarios', [AdministracionController::class, 'listarUsuarios']);
     Route::get('/mis-proyectos/{id}', [AnunciosController::class, 'getmisproyectosid']); 
     Route::get('/mis-proyectos', [AnunciosController::class, 'getmisproyectos']); 
 
