@@ -715,6 +715,7 @@ class AnunciosModel extends Model
             FROM proyecto_inversionistas
             WHERE interesado_id = ?
             AND estado = 'aceptado'
+            AND is_active = 1
             LIMIT 1
         ", [$userId]);
 
@@ -763,12 +764,14 @@ class AnunciosModel extends Model
         $proyecto->caracteristicas = DB::table('proyecto_caracteristicas')
             ->select('id', 'titulo', 'descripcion')
             ->where('proyecto_id', $id)
+            ->where('is_active', 1)
             ->get();
 
         // 📌 3. Multimedia (galería)
         $proyecto->multimedia = DB::table('proyecto_multimedia')
             ->select('id', 'tipo', 'archivo')
             ->where('proyecto_id', $id)
+            ->where('is_active', 1)
             ->get();
 
         // 📌 4. Imagen Principal + Galería unificada
@@ -786,6 +789,7 @@ class AnunciosModel extends Model
         $imagenesGaleria = DB::table('proyecto_multimedia')
             ->where('proyecto_id', $id)
             ->where('tipo', 'imagen')
+            ->where('is_active', 1)
             ->select('id', 'archivo', 'tipo')
             ->get();
 
@@ -795,6 +799,7 @@ class AnunciosModel extends Model
         $proyecto->videos = DB::table('proyecto_multimedia')
             ->where('proyecto_id', $id)
             ->where('tipo', 'video')
+            ->where('is_active', 1)
             ->select('id', 'archivo', 'tipo')
             ->get();
 
@@ -810,6 +815,7 @@ class AnunciosModel extends Model
                 'u.telefono'
             )
             ->where('pi.proyecto_id', $id)
+            ->where('pi.is_active', 1)
             ->get();
 
         // 📌 7. Etapas del proyecto (ordenadas correctamente)
@@ -823,11 +829,37 @@ class AnunciosModel extends Model
                 'fecha_completado'
             )
             ->where('proyecto_id', $id)
+            ->where('is_active', 1)
             ->orderBy('orden', 'asc')
             ->get();
 
         return $proyecto;
     }
 
+
+    public static function eliminarmultimedia($id)
+    {
+        return DB::update("UPDATE proyecto_multimedia SET is_active = 0 WHERE id = ?", [$id]);
+    }
+
+    public static function eliminaretapas($id)
+    {
+        return DB::update("UPDATE proyecto_etapas SET is_active = 0 WHERE id = ?", [$id]);
+    }
+
+    public static function eliminarcaracteristicas($id)
+    {
+        return DB::update("UPDATE proyecto_caracteristicas SET is_active = 0 WHERE id = ?", [$id]);
+    }
+
+    public static function eliminarinversionista($id)
+    {
+        return DB::update("UPDATE proyecto_inversionistas SET is_active = 0 WHERE id = ?", [$id]);
+    }
+
+
+    
+
+    
 
 }

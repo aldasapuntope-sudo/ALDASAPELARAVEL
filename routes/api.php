@@ -219,6 +219,14 @@ Route::prefix('inversiones')->group(function () {
     Route::get('/mis-proyectos', [AnunciosController::class, 'getmisproyectos']); 
 
     Route::get('/proyectos/detalle/{id}', [AnunciosController::class, 'getProyectoDetalle']); 
+
+
+    //ELIMINAR
+    Route::delete('/emultimedia/{id}', [AnunciosController::class, 'eliminarmultimedia']);
+    Route::delete('/eetapas/{id}', [AnunciosController::class, 'eliminaretapas']);
+    Route::delete('/ecaracteristicas/{id}', [AnunciosController::class, 'eliminarcaracteristicas']);
+    Route::delete('/einversionistas/{id}', [AnunciosController::class, 'eliminarinversionista']);
+    
 });
 
 

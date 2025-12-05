@@ -951,4 +951,56 @@ class AnunciosController extends Controller
     }
 
 
+    //ELIMINAR PROYECTOS INVERSIONES
+
+    public function eliminarmultimedia($id)
+    {
+        $resultado = AnunciosModel::eliminarmultimedia($id);
+        
+        if ($resultado > 0) {
+            return response()->json(['success' => true, 'message' => 'Plano eliminado correctamente']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'No se pudo eliminar el plano']);
+        }
+    }
+
+    public function eliminaretapas($id)
+    {
+        $resultado = AnunciosModel::eliminaretapas($id);
+        
+        if ($resultado > 0) {
+            return response()->json(['success' => true, 'message' => 'Plano eliminado correctamente']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'No se pudo eliminar el plano']);
+        }
+    }
+
+    public function eliminarcaracteristicas($id)
+    {
+        $resultado = AnunciosModel::eliminarcaracteristicas($id);
+        
+        if ($resultado > 0) {
+            return response()->json(['success' => true, 'message' => 'Plano eliminado correctamente']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'No se pudo eliminar el plano']);
+        }
+    }
+
+    public function eliminarinversionista($id)
+    {
+        $resultado = AnunciosModel::eliminarinversionista($id);
+        
+        if ($resultado > 0) {
+            return response()->json(['success' => true, 'message' => 'Plano eliminado correctamente']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'No se pudo eliminar el plano']);
+        }
+    }
+
+    
+
+
+    
+
+
 }
