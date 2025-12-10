@@ -220,7 +220,13 @@ Route::prefix('inversiones')->group(function () {
 
     Route::get('/proyectos/detalle/{id}', [AnunciosController::class, 'getProyectoDetalle']); 
 
+    // REGISTRAR NUEVO PROYECTO
+    Route::post('/registrar', [AnunciosController::class, 'registrarProyecto']);
 
+    // ACTUALIZAR PROYECTO
+    Route::post('/actualizar/{id}', [AnunciosController::class, 'actualizarProyecto']);
+
+    
     //ELIMINAR
     Route::delete('/emultimedia/{id}', [AnunciosController::class, 'eliminarmultimedia']);
     Route::delete('/eetapas/{id}', [AnunciosController::class, 'eliminaretapas']);

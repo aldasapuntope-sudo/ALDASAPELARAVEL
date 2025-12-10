@@ -1000,7 +1000,94 @@ class AnunciosController extends Controller
     
 
 
-    
+    public function actualizarProyecto(Request $request, $id)
+    {
+        try {
+            // 1️⃣ Validar los campos
+            $validated = $request->validate([
+                'titulo' => 'required|string|max:255',
+                'descripcion' => 'required|string',
+                'ubicacion' => 'required|string',
+                'imagen_principal' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+                'imagen_principal_actual' => 'nullable|string'
+            ]);
+
+
+
+            // 2️⃣ Buscar anuncio existente
+            $anuncio = DB::table('proyectos_inversion')->where('id', $id)->first();
+
+            if (!$anuncio) {
+                return response()->json([
+                    'estado' => 0,
+                    'mensaje' => 'Proyecto no encontrado.'
+                ], 404);
+            }
+
+            // 3️⃣ Manejar imagen
+            $rutaImagen = $anuncio->imagen_principal;
+
+            if ($request->hasFile('imagen_principal')) {
+                $archivo = $request->file('imagen_principal');
+                $nombre = 'propiedad_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+
+                $directorioEscritorio = 'C:/xampp/htdocs/proyectos';
+                if (!file_exists($directorioEscritorio)) {
+                    mkdir($directorioEscritorio, 0777, true);
+                }
+
+                $archivo->move($directorioEscritorio, $nombre);
+                $rutaImagen = 'proyectos/' . $nombre;
+            } else {
+                // Si no hay nueva imagen, usamos la actual enviada desde el front
+                if ($request->imagen_principal_actual) {
+                    $rutaImagen = $request->imagen_principal_actual;
+                }
+            }
+
+
+            // 4️⃣ Actualizar el anuncio
+            AnunciosModel::actualizarProyecto($id, $validated, $rutaImagen);
+
+
+            // 5️⃣ Actualizar inversionistas
+            if ($request->has('inversionistas')) {
+                $inversionistas = json_decode($request->inversionistas, true);
+
+                if (is_array($inversionistas)) {
+                    // eliminar las antiguas
+                    
+                    // guardar las nuevas
+                    AnunciosModel::guardarInversionistas($id, $inversionistas);
+                }
+            }
+            
+
+
+
+            // 6️⃣ Respuesta exitosa
+            return response()->json([
+                'estado' => 1,
+                'mensaje' => 'Anuncio actualizado correctamente.'
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Error de validación.',
+                'errores' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Error interno del servidor.',
+                'detalle' => $e->getMessage(),
+                'linea' => $e->getLine(),
+                'archivo' => $e->getFile(),
+            ], 500);
+        }
+    }
+
 
 
 }

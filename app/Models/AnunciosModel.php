@@ -858,7 +858,71 @@ class AnunciosModel extends Model
     }
 
 
-    
+    public static function actualizarProyecto($id, $data, $rutaImagen = null)
+    {
+        $updateData = [
+            'titulo' => $data['titulo'],
+            'descripcion' => $data['descripcion'],
+            'ubicacion' => $data['ubicacion'],
+            'updated_at' => now(),
+        ];
+
+        if ($rutaImagen !== null) {
+            $updateData['imagen_principal'] = $rutaImagen;
+        }
+
+        DB::table('proyectos_inversion')
+            ->where('id', $id)
+            ->update($updateData);
+    }
+
+
+    public static function guardarInversionistas($proyectoId, $inversionistas)
+    {
+        // Obtener inversionistas actuales de este proyecto
+        $actuales = DB::table('proyecto_inversionistas')
+            ->where('proyecto_id', $proyectoId)
+            ->pluck('interesado_id', 'id') // [ id_registro => interesado_id ]
+            ->toArray();
+
+        // IDs enviados desde el front (id del registro, no del usuario)
+        $idsEnviados = array_map(fn($i) => $i['id'], $inversionistas);
+
+        // 1️⃣ Insertar nuevos y actualizar existentes
+        foreach ($inversionistas as $inv) {
+            $id = $inv['id'] ?? null;                 // ID de proyecto_inversionistas
+            $estado = $inv['estado'];                // aceptado/interesado/rechazado
+
+            if ($id && array_key_exists($id, $actuales)) {
+                // 👉 Ya existe → actualizar estado
+                DB::table('proyecto_inversionistas')
+                    ->where('id', $id)
+                    ->update([
+                        'estado' => $estado,
+                        'updated_at' => now(),
+                    ]);
+            } else {
+                // 👉 No existe → insertar nuevo
+                DB::table('proyecto_inversionistas')->insert([
+                    'proyecto_id' => $proyectoId,
+                    'interesado_id' => $id,    // viene del front como id del "usuario"
+                    'estado' => $estado,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        // 2️⃣ Eliminar inversionistas que ya no vienen en el form
+        $idsAEliminar = array_diff(array_keys($actuales), $idsEnviados);
+
+        if (!empty($idsAEliminar)) {
+            DB::table('proyecto_inversionistas')
+                ->whereIn('id', $idsAEliminar)
+                ->delete();
+        }
+    }
+
 
     
 
