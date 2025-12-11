@@ -1052,8 +1052,8 @@ class AnunciosController extends Controller
 
             // 5️⃣ Actualizar inversionistas
             if ($request->has('inversionistas')) {
-                $inversionistas = json_decode($request->inversionistas, true);
-
+                //$inversionistas = json_decode($request->inversionistas, true);
+                $inversionistas = $request->inversionistas;
                 if (is_array($inversionistas)) {
                     // eliminar las antiguas
                     
@@ -1062,6 +1062,79 @@ class AnunciosController extends Controller
                 }
             }
             
+
+            if ($request->has('caracteristicas')) {
+                //$inversionistas = json_decode($request->inversionistas, true);
+                $caracteristicas = $request->caracteristicas;
+                if (is_array($caracteristicas)) {
+                    // eliminar las antiguas
+                    
+                    // guardar las nuevas
+                    AnunciosModel::guardarCaracteristicasproyecto($id, $caracteristicas);
+                }
+            }
+
+
+            if ($request->has('etapas')) {
+                //$inversionistas = json_decode($request->inversionistas, true);
+                $etapas = $request->etapas;
+                if (is_array($etapas)) {
+                    // eliminar las antiguas
+                    
+                    // guardar las nuevas
+                    AnunciosModel::guardarEtapasProyecto($id, $etapas);
+                }
+            }
+
+            // 🔹 GUARDAR MULTIMEDIA
+            if ($request->has('multimedia')) {
+
+                $multimedia = $request->multimedia;         // datos tipo / id / archivo_actual / url
+                $files = $request->file('multimedia') ?? []; // archivos reales (solo para imágenes)
+
+                foreach ($multimedia as $i => &$item) {
+
+                    $id           = $item['id'] ?? null;
+                    $tipo         = $item['tipo'];
+                    $archivoActual = $item['archivo_actual'] ?? null;
+
+                    $rutaFinal = $archivoActual; // por defecto queda igual
+
+                    /** 🔸 1. SI ES UNA IMAGEN - SUBIR EL ARCHIVO */
+                    if ($tipo === 'imagen') {
+
+                        if (isset($files[$i]['archivo'])) {
+
+                            $archivo = $files[$i]['archivo'];
+
+                            // ruta donde guardar imágenes
+                            $carpeta = 'C:/xampp/htdocs/proyectos_multimedia';
+
+                            if (!file_exists($carpeta)) {
+                                mkdir($carpeta, 0777, true);
+                            }
+
+                            $nombreArchivo = 'media_' . Str::random(12) . '.' . $archivo->getClientOriginalExtension();
+                            $archivo->move($carpeta, $nombreArchivo);
+
+                            // ruta final guardada en BD
+                            $rutaFinal = "proyectos_multimedia/$nombreArchivo";
+                        }
+                    }
+
+                    /** 🔸 2. SI ES VIDEO - RECIBIR SOLO URL (YouTube, Drive, etc.) */
+                    if ($tipo === 'video') {
+                        $rutaFinal = $item['archivo'] ?? $item['archivo_actual'] ?? $archivoActual;
+                    }
+
+                    // Guardar en el array para enviarlo al Modelo
+                    $item['archivo'] = $rutaFinal;
+                }
+
+                // 🔹 Enviar al modelo
+                AnunciosModel::guardarMultimediaProyecto($id, $multimedia);
+            }
+
 
 
 

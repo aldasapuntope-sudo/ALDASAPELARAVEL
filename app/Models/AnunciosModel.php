@@ -808,6 +808,7 @@ class AnunciosModel extends Model
             ->join('usuario AS u', 'pi.interesado_id', '=', 'u.id')
             ->select(
                 'pi.id',
+                'pi.interesado_id',
                 'pi.estado',
                 'u.nombre',
                 'u.apellido',
@@ -885,27 +886,42 @@ class AnunciosModel extends Model
             ->pluck('interesado_id', 'id') // [ id_registro => interesado_id ]
             ->toArray();
 
+        // IDs actuales de registros
+        $idsActuales = array_keys($actuales);
+
         // IDs enviados desde el front (id del registro, no del usuario)
-        $idsEnviados = array_map(fn($i) => $i['id'], $inversionistas);
+        $idsEnviados = [];
 
-        // 1️⃣ Insertar nuevos y actualizar existentes
         foreach ($inversionistas as $inv) {
-            $id = $inv['id'] ?? null;                 // ID de proyecto_inversionistas
-            $estado = $inv['estado'];                // aceptado/interesado/rechazado
 
-            if ($id && array_key_exists($id, $actuales)) {
-                // 👉 Ya existe → actualizar estado
+            $registroId = $inv['id'] ?? null;             // id de la tabla proyecto_inversionistas
+            $usuarioId  = $inv['interesado_id'] ?? null;  // id del usuario
+            $estado     = $inv['estado'];
+
+            // Guardar ids enviados para luego borrar los no enviados
+            if ($registroId) {
+                $idsEnviados[] = $registroId;
+            }
+
+            // 🔹 1. ACTUALIZAR registro existente
+            if ($registroId && in_array($registroId, $idsActuales)) {
+
                 DB::table('proyecto_inversionistas')
-                    ->where('id', $id)
+                    ->where('id', $registroId)
                     ->update([
+                        'interesado_id' => $usuarioId,
                         'estado' => $estado,
                         'updated_at' => now(),
                     ]);
-            } else {
-                // 👉 No existe → insertar nuevo
+
+                continue;
+            }
+
+            // 🔹 2. INSERTAR si es nuevo
+            if (!$registroId) {
                 DB::table('proyecto_inversionistas')->insert([
                     'proyecto_id' => $proyectoId,
-                    'interesado_id' => $id,    // viene del front como id del "usuario"
+                    'interesado_id' => $usuarioId,
                     'estado' => $estado,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -913,8 +929,8 @@ class AnunciosModel extends Model
             }
         }
 
-        // 2️⃣ Eliminar inversionistas que ya no vienen en el form
-        $idsAEliminar = array_diff(array_keys($actuales), $idsEnviados);
+        // 🔹 3. ELIMINAR SOLO LOS QUE YA NO VIENEN DEL FRONT
+        $idsAEliminar = array_diff($idsActuales, $idsEnviados);
 
         if (!empty($idsAEliminar)) {
             DB::table('proyecto_inversionistas')
@@ -922,6 +938,189 @@ class AnunciosModel extends Model
                 ->delete();
         }
     }
+
+    public static function guardarCaracteristicasproyecto($proyectoId, $caracteristicas) {
+        // Obtener registros actuales
+        $actuales = DB::table('proyecto_caracteristicas')
+            ->where('proyecto_id', $proyectoId)
+            ->pluck('id')   // Solo ids
+            ->toArray();
+
+        $idsActuales = $actuales;
+        $idsEnviados = [];
+
+        foreach ($caracteristicas as $carac) {
+
+            $registroId   = $carac['id'] ?? null;
+            $titulo       = $carac['titulo'] ?? null;
+            $descripcion  = $carac['descripcion'] ?? null;
+
+            // Guardar ids enviados
+            if ($registroId) {
+                $idsEnviados[] = $registroId;
+            }
+
+            /** 🔹 1. ACTUALIZAR */
+            if ($registroId && in_array($registroId, $idsActuales)) {
+                DB::table('proyecto_caracteristicas')
+                    ->where('id', $registroId)
+                    ->update([
+                        'titulo' => $titulo,
+                        'descripcion' => $descripcion,
+                        'updated_at' => now(),
+                    ]);
+
+                continue;
+            }
+
+            /** 🔹 2. INSERTAR */
+            if (!$registroId) {
+                DB::table('proyecto_caracteristicas')->insert([
+                    'proyecto_id' => $proyectoId,
+                    'titulo' => $titulo,
+                    'descripcion' => $descripcion,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        /** 🔹 3. ELIMINAR LOS QUE YA NO VIENEN DESDE EL FRONT */
+        $idsAEliminar = array_diff($idsActuales, $idsEnviados);
+
+        if (!empty($idsAEliminar)) {
+            DB::table('proyecto_caracteristicas')
+                ->whereIn('id', $idsAEliminar)
+                ->delete();
+        }
+    }
+
+    public static function guardarEtapasProyecto($proyectoId, $etapas)
+    {
+        // Obtener registros actuales (solo IDs)
+        $actuales = DB::table('proyecto_etapas')
+            ->where('proyecto_id', $proyectoId)
+            ->pluck('id')
+            ->toArray();
+
+        $idsActuales = $actuales;
+        $idsEnviados = [];
+
+        foreach ($etapas as $etapa) {
+
+            $registroId        = $etapa['id'] ?? null;
+            $nombre            = $etapa['nombre'] ?? null;
+            $descripcion       = $etapa['descripcion'] ?? null;
+            $orden             = $etapa['orden'] ?? 1;
+            $completado        = $etapa['completado'] ?? 0;
+            $fechaCompletado   = $etapa['fecha_completado'] ?? null;
+
+            // Guardar IDs enviados
+            if ($registroId) {
+                $idsEnviados[] = $registroId;
+            }
+
+            /** 🔹 1. ACTUALIZAR */
+            if ($registroId && in_array($registroId, $idsActuales)) {
+
+                DB::table('proyecto_etapas')
+                    ->where('id', $registroId)
+                    ->update([
+                        'nombre'            => $nombre,
+                        'descripcion'       => $descripcion,
+                        'orden'             => $orden,
+                        'completado'        => $completado,
+                        'fecha_completado'  => $fechaCompletado,
+                        'updated_at'        => now(),
+                    ]);
+
+                continue;
+            }
+
+            /** 🔹 2. INSERTAR */
+            if (!$registroId) {
+                DB::table('proyecto_etapas')->insert([
+                    'proyecto_id'       => $proyectoId,
+                    'nombre'            => $nombre,
+                    'descripcion'       => $descripcion,
+                    'orden'             => $orden,
+                    'completado'        => $completado,
+                    'fecha_completado'  => $fechaCompletado,
+                    'created_at'        => now(),
+                    'updated_at'        => now(),
+                ]);
+            }
+        }
+
+        /** 🔹 3. ELIMINAR LOS QUE YA NO VIENEN DEL FRONT */
+        $idsAEliminar = array_diff($idsActuales, $idsEnviados);
+
+        if (!empty($idsAEliminar)) {
+            DB::table('proyecto_etapas')
+                ->whereIn('id', $idsAEliminar)
+                ->delete();
+        }
+    }
+
+
+    public static function guardarMultimediaProyecto($proyectoId, $items)
+    {
+        $actuales = DB::table('proyecto_multimedia')
+            ->where('proyecto_id', $proyectoId)
+            ->pluck('id')
+            ->toArray();
+
+        $idsActuales = $actuales;
+        $idsEnviados = [];
+
+        foreach ($items as $item) {
+
+            $registroId = $item['id'] ?? null;
+            $tipo       = $item['tipo'];
+            $archivo    = $item['archivo']; // ya es la ruta final o url
+
+            // registrar ids enviados
+            if ($registroId) {
+                $idsEnviados[] = $registroId;
+            }
+
+            /** 🔹 UPDATE */
+            if ($registroId && in_array($registroId, $idsActuales)) {
+                DB::table('proyecto_multimedia')
+                    ->where('id', $registroId)
+                    ->update([
+                        'tipo'     => $tipo,
+                        'archivo'  => $archivo,
+                        'updated_at' => now(),
+                    ]);
+                continue;
+            }
+
+            /** 🔹 INSERT */
+            if (!$registroId) {
+                DB::table('proyecto_multimedia')->insert([
+                    'proyecto_id' => $proyectoId,
+                    'tipo'        => $tipo,
+                    'archivo'     => $archivo,
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ]);
+            }
+        }
+
+        /** 🔹 ELIMINAR LOS QUE YA NO VIENEN */
+        $idsAEliminar = array_diff($idsActuales, $idsEnviados);
+
+        if (!empty($idsAEliminar)) {
+            DB::table('proyecto_multimedia')
+                ->whereIn('id', $idsAEliminar)
+                ->delete();
+        }
+    }
+
+
+
+    
 
 
     
