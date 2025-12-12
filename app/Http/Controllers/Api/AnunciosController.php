@@ -1094,7 +1094,7 @@ class AnunciosController extends Controller
 
                 foreach ($multimedia as $i => &$item) {
 
-                    $id           = $item['id'] ?? null;
+                    $multimediaId = $item['id'] ?? null;
                     $tipo         = $item['tipo'];
                     $archivoActual = $item['archivo_actual'] ?? null;
 
