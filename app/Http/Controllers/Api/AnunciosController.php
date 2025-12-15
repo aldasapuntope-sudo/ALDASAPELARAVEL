@@ -1089,49 +1089,61 @@ class AnunciosController extends Controller
             // 🔹 GUARDAR MULTIMEDIA
             if ($request->has('multimedia')) {
 
-                $multimedia = $request->multimedia;         // datos tipo / id / archivo_actual / url
-                $files = $request->file('multimedia') ?? []; // archivos reales (solo para imágenes)
+                // 📌 Datos enviados desde el front
+                $multimedia = $request->multimedia;          // id / tipo / archivo
+                $files      = $request->file('multimedia') ?? []; // archivos reales (solo imágenes)
 
                 foreach ($multimedia as $i => &$item) {
 
                     $multimediaId = $item['id'] ?? null;
-                    $tipo         = $item['tipo'];
-                    $archivoActual = $item['archivo_actual'] ?? null;
+                    $tipo         = $item['tipo'] ?? null;
 
-                    $rutaFinal = $archivoActual; // por defecto queda igual
+                    // 🔹 valor por defecto: lo que venga del front (string)
+                    $rutaFinal = $item['archivo'] ?? null;
 
-                    /** 🔸 1. SI ES UNA IMAGEN - SUBIR EL ARCHIVO */
+                    /** 🔸 1. IMAGEN */
                     if ($tipo === 'imagen') {
 
-                        if (isset($files[$i]['archivo'])) {
+                        // Si llega un archivo nuevo → reemplazar
+                        if (isset($files[$i]['archivo']) && $files[$i]['archivo']->isValid()) {
 
                             $archivo = $files[$i]['archivo'];
 
-                            // ruta donde guardar imágenes
+                            // 📁 Carpeta destino
                             $carpeta = 'C:/xampp/htdocs/proyectos_multimedia';
 
                             if (!file_exists($carpeta)) {
                                 mkdir($carpeta, 0777, true);
                             }
 
+                            // 🧾 Nombre único
                             $nombreArchivo = 'media_' . Str::random(12) . '.' . $archivo->getClientOriginalExtension();
+
+                            // ⬆️ Subir archivo
                             $archivo->move($carpeta, $nombreArchivo);
 
-                            // ruta final guardada en BD
+                            // 🧠 Ruta que se guarda en BD
                             $rutaFinal = "proyectos_multimedia/$nombreArchivo";
                         }
+                        // Si NO hay archivo nuevo → se mantiene la ruta enviada
                     }
 
-                    /** 🔸 2. SI ES VIDEO - RECIBIR SOLO URL (YouTube, Drive, etc.) */
+                    /** 🔸 2. VIDEO (solo URL) */
                     if ($tipo === 'video') {
-                        $rutaFinal = $item['archivo'] ?? $item['archivo_actual'] ?? $archivoActual;
+                        // siempre string (YouTube, Drive, etc.)
+                        $rutaFinal = $item['archivo'] ?? null;
                     }
 
-                    // Guardar en el array para enviarlo al Modelo
+                    // 🚨 Seguridad: evitar NULL accidentales
+                    if (!$rutaFinal) {
+                        continue; // o lanzar excepción si prefieres
+                    }
+
+                    // Guardar valor final para el modelo
                     $item['archivo'] = $rutaFinal;
                 }
 
-                // 🔹 Enviar al modelo
+                // 📦 Enviar al modelo
                 AnunciosModel::guardarMultimediaProyecto($id, $multimedia);
             }
 
@@ -1160,6 +1172,41 @@ class AnunciosController extends Controller
             ], 500);
         }
     }
+
+
+
+    //CRUD PROPIEDAD ALDASA CLUB
+
+    public function getestadomembresia($id)
+    {
+        $plan = DB::table('usuarios_planesclub')
+            ->where('user_id', $id)
+            ->where('is_active', 1)
+            ->where('estado', 'activo')
+            ->where('fecha_fin', '>=', now())
+            ->orderByDesc('fecha_fin')
+            ->first();
+
+        if ($plan) {
+            return response()->json([
+                'activo' => true,
+                'plan_id' => $plan->plan_id,
+                'fecha_fin' => $plan->fecha_fin,
+            ]);
+        }
+
+        return response()->json([
+            'activo' => false
+        ]);
+    }
+
+    public function listardetalleprincipalclub($idpublish)
+    {
+        $resultado = AnunciosModel::listardetalleprincipalclub($idpublish);
+        return response()->json($resultado);
+    }
+
+
 
 
 

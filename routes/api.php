@@ -236,6 +236,35 @@ Route::prefix('inversiones')->group(function () {
 });
 
 
+Route::prefix('aldasaclub')->middleware('auth:sanctum')->group(function () {
+//Route::prefix('aldasaclub')->group(function () {
+    Route::get('/estado-membresia/{id}', [AnunciosController::class, 'getestadomembresia']); 
+    Route::get('/listardetalle/{id}', [AnunciosController::class, 'listardetalleprincipal']);
+
+    Route::get('/lplanos/{id}', [AnunciosController::class, 'listarplanos']); 
+    Route::delete('/eplanos/{id}', [AnunciosController::class, 'eliminarplanos']);
+    Route::get('/limagenesecundarias/{id}', [AnunciosController::class, 'listaimgsecundarias']); 
+    Route::delete('/eimagenesecundarias/{id}', [AnunciosController::class, 'eliminarimgsecundarias']);
+
+    Route::get('/tipos-propiedad', [AnunciosController::class, 'tiposPropiedad']); 
+    Route::get('/tipos-operacion', [AnunciosController::class, 'tiposOperacion']); 
+    Route::get('/tipos-ubicaciones', [AnunciosController::class, 'tiposUbicaciones']); 
+    Route::post('/registrar', [AnunciosController::class, 'registraranuncio']);
+    Route::get('/listar/{is_publish}/{id}', [AnunciosController::class, 'listaranuncio']); 
+    Route::put('/actualizar/{id}', [AnunciosController::class, 'actualizaranuncio']); 
+    Route::get('/caracteristicas-catalogo/{tpropiedad}', [AnunciosController::class, 'categoriasCatalogo']); 
+    Route::get('/caracteristicas-catalogoid/{id}', [AnunciosController::class, 'categoriasCatalogoid']); 
+    Route::get('/propiedad_amenities/{tpropiedad}', [AnunciosController::class, 'amenities']); 
+    Route::get('/propiedad_amenitiesid/{id}', [AnunciosController::class, 'amenitiesid']); 
+ 
+    Route::get('/mensajes-anuncio/{id}', [AnunciosController::class, 'getMensajeanuncio']); 
+    Route::get('/anuncio-favoritos/{id}', [AnunciosController::class, 'getanunciosFavoritos']); 
+    Route::get('/monedas', [AnunciosController::class, 'getmonedas']);
+
+    Route::post('/vendido/{id}', [AnunciosController::class, 'actualizarvendido']); 
+});
+
+
 Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink']);
 Route::get('/reset-password/{token}', [PasswordResetController::class, 'validateToken']);
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
