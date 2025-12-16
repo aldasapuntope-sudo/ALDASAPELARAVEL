@@ -1179,19 +1179,34 @@ class AnunciosController extends Controller
 
     public function getestadomembresia($id)
     {
+        // 1️⃣ Marcar como vencidos los planes expirados
+        DB::table('usuarios_planesclub')
+            ->where('user_id', $id)
+            ->where('estado', 'activo')
+            ->whereNotNull('fecha_fin')
+            ->where('fecha_fin', '<', now())
+            ->update([
+                'estado' => 'vencido',
+                'is_active' => 0
+            ]);
+
+        // 2️⃣ Buscar plan vigente
         $plan = DB::table('usuarios_planesclub')
             ->where('user_id', $id)
-            ->where('is_active', 1)
             ->where('estado', 'activo')
+            ->where('is_active', 1)
+            ->whereNotNull('fecha_fin')
             ->where('fecha_fin', '>=', now())
             ->orderByDesc('fecha_fin')
             ->first();
 
+        // 3️⃣ Respuesta
         if ($plan) {
             return response()->json([
-                'activo' => true,
-                'plan_id' => $plan->plan_id,
+                'activo'    => true,
+                'plan_id'   => $plan->plan_id,
                 'fecha_fin' => $plan->fecha_fin,
+                'anuncios_disponibles' => $plan->anuncios_disponibles
             ]);
         }
 
@@ -1200,13 +1215,44 @@ class AnunciosController extends Controller
         ]);
     }
 
+
+
     public function listardetalleprincipalclub($idpublish)
     {
         $resultado = AnunciosModel::listardetalleprincipalclub($idpublish);
         return response()->json($resultado);
     }
 
+     public function listaranuncioaldasaclub($idpublish, $id)
+    {
+        $resultado = AnunciosModel::listaranuncioaldasaclub($idpublish, $id);
+        return response()->json($resultado);
+    }
 
+
+    public function actualizarvendidoclub(Request $request, $id)
+    {
+        try {
+            // Validar
+            $request->validate([
+                'vendido' => 'required|boolean'
+            ]);
+
+            // Convertir estado: true = 2 (vendido), false = 1 (activo)
+            $nuevoEstado = $request->vendido ? 2 : 1;
+
+            // Llamada al modelo encargado
+            $resultado = AnunciosModel::actualizarEstadoVendidoclub($id, $nuevoEstado);
+
+            if (!$resultado) {
+                return response()->json(['message' => 'No encontrado'], 404);
+            }
+
+            return response()->json(['message' => 'Estado actualizado correctamente']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 
 
 

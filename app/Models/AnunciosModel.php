@@ -1241,6 +1241,109 @@ class AnunciosModel extends Model
     }
 
 
+    public static function listaranuncioaldasaclub($idpublish, $id)
+    {
+        // Traer los anuncios base
+        $anuncios = DB::select("
+            SELECT 
+                p.id, 
+                u.id as id_ubicacion, 
+                u.nombre as ubicacion, 
+                tp.id as id_tipopropiedad, 
+                tp.nombre as tipo_propiedad, 
+                o.id as id_operacion, 
+                o.nombre as operaciones, 
+                p.titulo, 
+                p.descripcion,
+                p.precio,
+                m.simbolo AS moneda_simbolo,
+                p.moneda_id,
+                p.direccion,
+                p.imagen_principal, 
+                p.visitas,
+                p.is_active_publish
+            FROM propiedadesclub p 
+            INNER JOIN ubicaciones u ON p.ubicacion_id = u.id 
+            INNER JOIN tipos_propiedad tp ON p.tipo_id = tp.id 
+            INNER JOIN operaciones o ON p.operacion_id = o.id 
+            INNER JOIN monedas m ON p.moneda_id = m.id
+            WHERE p.is_active = 1 
+            AND p.is_active_publish = $idpublish 
+            ORDER BY p.id DESC
+        ");
+
+        // Para cada anuncio, traer sus características principales y secundarias
+        foreach ($anuncios as $anuncio) {
+            // Características principales
+            $anuncio->caracteristicas = DB::table('propiedad_caracteristicasclub as pc')
+                ->join('caracteristicas_catalogoclub as cc', 'pc.caracteristica_id', '=', 'cc.id')
+                ->select('cc.nombre', 'cc.icono', 'cc.unidad', 'pc.valor')
+                ->where('pc.propiedad_id', $anuncio->id)
+                ->get();
+
+            // Características secundarias (amenities)
+            $anuncio->amenities = DB::table('propiedad_amenitiesclub as pa')
+                ->join('amenitiesclub as ac', 'pa.amenity_id', '=', 'ac.id')
+                ->select('ac.nombre', 'ac.icon_url')
+                ->where('pa.propiedad_id', $anuncio->id)
+                ->get();
+
+            $imagenPrincipal = collect();
+
+            if (!empty($anuncio->imagen_principal)) {
+                $imagenPrincipal->push((object)[
+                    'id' => 0,
+                    'titulo' => 'Imagen principal',
+                    'imagen' => $anuncio->imagen_principal,
+                ]);
+            }
+
+            // Otras imágenes
+            $imagenesSecundarias = DB::table('propiedad_imagenesclub as img')
+                ->select('img.id', 'img.titulo', 'img.imagen')
+                ->where('img.propiedad_id', $anuncio->id)
+                ->where('img.is_active', 1)
+                ->get();
+
+            // Unir principal + secundarias
+            $anuncio->imagenes = $imagenPrincipal->merge($imagenesSecundarias);
+
+            $anuncio->planos = DB::table('propiedad_planosclub as pp')
+                ->select('pp.id', 'pp.titulo', 'pp.imagen')
+                ->where('pp.propiedad_id', $anuncio->id)
+                ->where('pp.is_active', 1)
+                ->get()
+                ->map(function ($plano) {
+                    $plano->caracteristicas = DB::table('plano_caracteristicasclub as pc')
+                        ->select('pc.nombre', 'pc.valor', 'pc.icono')
+                        ->where('pc.plano_id', $plano->id)
+                        ->where('pc.is_active', 1)
+                        ->get();
+                    return $plano;
+                });
+
+            
+            $anuncio->videos = DB::table('propiedad_videosclub as pv')
+                ->select('pv.url')
+                ->where('pv.propiedad_id', $anuncio->id)
+                ->where('pv.is_active', 1)
+                ->get();
+        }
+
+        return $anuncios;
+    }
+
+
+    public static function actualizarEstadoVendidoclub($id, $estado)
+    {
+        return DB::table('propiedadesclub')
+            ->where('id', $id)
+            ->update([
+                'is_active_publish' => $estado,
+                'updated_at' => now()
+            ]);
+    }
+
     
 
 }
