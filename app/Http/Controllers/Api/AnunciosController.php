@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\AnunciosModel;
@@ -1254,6 +1255,414 @@ class AnunciosController extends Controller
         }
     }
 
+    public function regsuscripciones(Request $request)
+    {
+        // 1️⃣ Validar email
+        
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|max:150|unique:suscripciones,email',
+        ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Correo inválido o ya registrado',
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            // 2️⃣ Insertar suscripción
+            DB::table('suscripciones')->insert([
+                'email'      => $request->email,
+                'is_active'     => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // 3️⃣ Respuesta OK
+            return response()->json([
+                'success' => true,
+                'message' => 'Suscripción registrada correctamente'
+            ], 201);
+
+        } catch (\Exception $e) {
+            // 4️⃣ Error inesperado
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al registrar la suscripción'
+            ], 500);
+        }
+    }
+
+
+
+    public function listarplanosclub($id)
+    {
+        $resultado = AnunciosModel::listarplanosclub($id);
+        return response()->json($resultado);
+    }
+
+    public function categoriasCatalogoidclub($id)
+    {
+        $resultado = AnunciosModel::categoriasCatalogoidclub($id);
+        return response()->json($resultado);
+    }
+
+    public function amenitiesidclub($id)
+    {
+        $resultado = AnunciosModel::amenitiesidclub($id);
+        return response()->json($resultado);
+    }
+
+    public function listaimgsecundariasclub($id)
+    {
+        $resultado = AnunciosModel::listaimgsecundariasclub($id);
+        return response()->json($resultado);
+    }
+
+    public function categoriasCatalogoclub($tpropiedad)
+    {
+        $resultado = AnunciosModel::categoriasCatalogoclub($tpropiedad);
+        return response()->json($resultado);
+    }
+
+    public function amenitiesclub($tpropiedad)
+    {
+        $resultado = AnunciosModel::amenitiesclub($tpropiedad);
+        return response()->json($resultado);
+    }
+
+
+    public function actualizaranuncioclub(Request $request, $id)
+    {
+        try {
+            // 1️⃣ Validar los campos
+            $validated = $request->validate([
+                'tipo_id' => 'required|integer',
+                'operacion_id' => 'required|integer',
+                'ubicacion_id' => 'required|integer',
+                'moneda_id' => 'required|integer|exists:monedas,id',
+                'titulo' => 'required|string|max:255',
+                'descripcion' => 'required|string',
+                'precio' => 'required|numeric|min:0',
+                'direccion' => 'required|string',
+            ]);
+
+            // 2️⃣ Buscar anuncio existente
+            $anuncio = DB::table('propiedadesclub')->where('id', $id)->first();
+
+            if (!$anuncio) {
+                return response()->json([
+                    'estado' => 0,
+                    'mensaje' => 'Anuncio no encontrado.'
+                ], 404);
+            }
+
+            // 3️⃣ Manejar imagen
+            $rutaImagen = $anuncio->imagen_principal; // mantener la anterior si no hay nueva
+
+            if ($request->hasFile('imagen_principal')) {
+                $archivo = $request->file('imagen_principal');
+                $nombre = 'propiedad_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+
+                $directorioEscritorio = 'C:/xampp/htdocs/propiedadesclub';
+                if (!file_exists($directorioEscritorio)) {
+                    mkdir($directorioEscritorio, 0777, true);
+                }
+
+                $archivo->move($directorioEscritorio, $nombre);
+                $rutaImagen = 'propiedadesclub/' . $nombre;
+            }
+
+            // 4️⃣ Actualizar el anuncio
+            AnunciosModel::actualizarAnuncioclub($id, $validated, $rutaImagen);
+
+            // 5️⃣ Actualizar características
+            if ($request->has('caracteristicas')) {
+                $caracteristicas = json_decode($request->caracteristicas, true);
+
+                if (is_array($caracteristicas)) {
+                    // eliminar las antiguas
+                    
+                    // guardar las nuevas
+                    AnunciosModel::guardarCaracteristicasclub($id, $caracteristicas);
+                }
+            }
+
+            if ($request->has('caracteristicas_secundarias')) {
+                $caracteristicas_secundarias = json_decode($request->caracteristicas_secundarias, true);
+
+                if (is_array($caracteristicas_secundarias)) {
+                    // eliminar las antiguas
+                    
+                    // guardar las nuevas
+                    AnunciosModel::guardarCaracteristicassecundariasclub($id, $caracteristicas_secundarias);
+                }
+            }
+
+            // 7️⃣ Actualizar planos (nuevos)
+           if ($request->has('planos')) {
+                $planosData = $request->planos; // array con ['archivo', 'titulo'] por cada índice
+
+                // Eliminar planos anteriores si quieres reemplazarlos
+                //DB::table('propiedad_planos')->where('propiedad_id', $id)->delete();
+
+                foreach ($planosData as $plano) {
+                    if (isset($plano['archivo'])) {
+                        $archivo = $plano['archivo']; // esto ya es un UploadedFile
+                        $titulo = $plano['titulo'] ?? '';
+
+                        $directorioPlanos = 'C:/xampp/htdocs/planosclub';
+                        if (!file_exists($directorioPlanos)) mkdir($directorioPlanos, 0777, true);
+
+                        $nombrePlano = 'planoclub_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+                        $archivo->move($directorioPlanos, $nombrePlano);
+
+                        AnunciosModel::guardarPlanosclub($id, $titulo, $nombrePlano);
+                        /*DB::table('propiedad_planos')->insert([
+                            'propiedad_id' => $id,
+                            'titulo' => $titulo,
+                            'imagen' => 'planos/' . $nombrePlano,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);*/
+                    }
+                }
+            }
+
+            // 9️⃣ Subir y guardar imágenes secundarias
+            if ($request->hasFile('imagenes_secundarias')) {
+                foreach ($request->file('imagenes_secundarias') as $imagenSecundaria) {
+                    if ($imagenSecundaria->isValid()) {
+
+                        $directorioImagenes = 'C:/xampp/htdocs/propiedades_imagenesclub';
+                        if (!file_exists($directorioImagenes)) {
+                            mkdir($directorioImagenes, 0777, true);
+                        }
+
+                        $nombreArchivo = 'imgclub_' . Str::random(10) . '.' . $imagenSecundaria->getClientOriginalExtension();
+                        $imagenSecundaria->move($directorioImagenes, $nombreArchivo);
+
+                        // ✅ Llamamos al modelo
+                        AnunciosModel::guardarImagenesclub($id, null, $nombreArchivo);
+                    }
+                }
+            }
+
+            if ($request->filled('video_url')) {
+                $video_url = trim($request->input('video_url'));
+
+                if (!empty($video_url)) {
+                    // Elimina los videos antiguos si lo deseas
+                    DB::table('propiedad_videos')->where('propiedad_id', $id)->delete();
+
+                    // Guarda el nuevo video
+                    AnunciosModel::guardarvideourlclub($id, $video_url);
+                }
+            }
+
+
+
+            // 6️⃣ Respuesta exitosa
+            return response()->json([
+                'estado' => 1,
+                'mensaje' => 'Anuncio actualizado correctamente.'
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Error de validación.',
+                'errores' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Error interno del servidor.',
+                'detalle' => $e->getMessage(),
+                'linea' => $e->getLine(),
+                'archivo' => $e->getFile(),
+            ], 500);
+        }
+    }
+
+
+    public function registraranuncioclub(Request $request)
+    {
+        try {
+
+            
+            // 1️⃣ Validar campos obligatorios
+            $validated = $request->validate([
+                'tipo_id' => 'required|integer',
+                'operacion_id' => 'required|integer',
+                'ubicacion_id' => 'required|integer',
+                'moneda_id' => 'required|integer|exists:monedas,id',
+                'titulo' => 'required|string|max:255',
+                'descripcion' => 'required|string',
+                'precio' => 'required|numeric|min:0',
+                'imagen_principal' => 'nullable|image',
+                'user_id' => 'required|integer',
+                'direccion' => 'required|string',
+            ]);
+
+            $userId = $request->user_id;
+
+            // 2️⃣ Verificar plan activo
+            $plan = DB::table('usuarios_planesclub')
+                ->where('user_id', $userId)
+                ->where('is_active', 1)
+                ->first();
+
+            if (!$plan) {
+                return response()->json([
+                    'estado' => 0,
+                    'mensaje' => 'No tienes un plan activo para publicar anuncios.',
+                ], 403);
+            }
+
+            // 3️⃣ Verificar vencimiento del plan
+            if (Carbon::now()->gt(Carbon::parse($plan->fecha_fin))) {
+                DB::table('usuarios_planesclub')
+                    ->where('id', $plan->id)
+                    ->update(['estado' => 'vencido', 'is_active' => 0]);
+
+                return response()->json([
+                    'estado' => 0,
+                    'mensaje' => 'Tu plan ha vencido. Renueva tu suscripción para continuar publicando.',
+                ], 403);
+            }
+
+            // 4️⃣ Contar anuncios existentes
+            $totalAnuncios = DB::table('propiedadesclub')
+                ->where('user_id', $userId)
+                ->where('is_active', 1)
+                ->count();
+
+            if ($totalAnuncios >= $plan->anuncios_disponibles) {
+                return response()->json([
+                    'estado' => 0,
+                    'mensaje' => 'Has alcanzado el límite de anuncios disponibles en tu plan.',
+                ], 403);
+            }
+
+            // 5️⃣ Subir imagen principal
+            $rutaImagen = null;
+            if ($request->hasFile('imagen_principal')) {
+                $archivo = $request->file('imagen_principal');
+                $nombre = 'propiedadclub_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+
+                $directorioPropiedades = 'C:/xampp/htdocs/propiedadesclub';
+                if (!file_exists($directorioPropiedades)) {
+                    mkdir($directorioPropiedades, 0777, true);
+                }
+
+                $archivo->move($directorioPropiedades, $nombre);
+                $rutaImagen = 'propiedadesclub/' . $nombre;
+            }
+
+            // 6️⃣ Crear anuncio principal
+            $idPropiedad = AnunciosModel::crearAnuncioclub($validated, $rutaImagen);
+
+            // 7️⃣ Guardar características
+            if ($request->has('caracteristicas')) {
+                $caracteristicas = json_decode($request->caracteristicas, true);
+                if (is_array($caracteristicas) && count($caracteristicas) > 0) {
+                    AnunciosModel::guardarCaracteristicasclub($idPropiedad, $caracteristicas);
+                }
+            }
+
+            if ($request->has('caracteristicas_secundarias')) {
+                $caracteristicas_secundarias = json_decode($request->caracteristicas_secundarias, true);
+                if (is_array($caracteristicas_secundarias) && count($caracteristicas_secundarias) > 0) {
+                    AnunciosModel::guardarCaracteristicassecundariasclub($idPropiedad, $caracteristicas_secundarias);
+                }
+            }
+
+            // 8️⃣ Subir y guardar planos
+            if ($request->has('planos')) {
+                $planosData = $request->planos; // array con ['archivo', 'titulo']
+
+                foreach ($planosData as $plano) {
+                    if (isset($plano['archivo'])) {
+                        $archivo = $plano['archivo'];
+                        $titulo = $plano['titulo'] ?? '';
+
+                        $directorioPlanos = 'C:/xampp/htdocs/planosclub';
+                        if (!file_exists($directorioPlanos)) mkdir($directorioPlanos, 0777, true);
+
+                        $nombrePlano = 'planoclub_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+                        $archivo->move($directorioPlanos, $nombrePlano);
+
+                        AnunciosModel::guardarPlanosclub($idPropiedad, $titulo, $nombrePlano);
+                    }
+                }
+            }
+
+            // 9️⃣ Subir y guardar imágenes secundarias
+            if ($request->hasFile('imagenes_secundarias')) {
+                foreach ($request->file('imagenes_secundarias') as $imagenSecundaria) {
+                    if ($imagenSecundaria->isValid()) {
+
+                        $directorioImagenes = 'C:/xampp/htdocs/propiedades_imagenesclub';
+                        if (!file_exists($directorioImagenes)) {
+                            mkdir($directorioImagenes, 0777, true);
+                        }
+
+                        $nombreArchivo = 'imgclub_' . Str::random(10) . '.' . $imagenSecundaria->getClientOriginalExtension();
+                        $imagenSecundaria->move($directorioImagenes, $nombreArchivo);
+
+                        // ✅ Llamamos al modelo
+                        AnunciosModel::guardarImagenesclub($idPropiedad, null, $nombreArchivo);
+                    }
+                }
+            }
+
+
+            // 9️⃣ Respuesta exitosa
+            return response()->json([
+                'estado' => 1,
+                'mensaje' => 'Anuncio registrado correctamente.',
+                'id' => $idPropiedad,
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Error de validación.',
+                'errores' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Error interno del servidor.',
+                'detalle' => $e->getMessage(),
+                'linea' => $e->getLine(),
+            ], 500);
+        }
+    }
+
+    public function eliminarplanosclub($id)
+    {
+        $resultado = AnunciosModel::eliminarplanosclub($id);
+        
+        if ($resultado > 0) {
+            return response()->json(['success' => true, 'message' => 'Plano eliminado correctamente']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'No se pudo eliminar el plano']);
+        }
+    }
+
+    public function eliminarimgsecundariasclub($id)
+    {
+        $resultado = AnunciosModel::eliminarimgsecundariasclub($id);
+        
+        if ($resultado > 0) {
+            return response()->json(['success' => true, 'message' => 'Plano eliminado correctamente']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'No se pudo eliminar el plano']);
+        }
+    }
 
 }

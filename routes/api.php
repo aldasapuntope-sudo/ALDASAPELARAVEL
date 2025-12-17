@@ -39,7 +39,7 @@ Route::prefix('misanuncios')->middleware('auth:sanctum')->group(function () {
     Route::get('/lplanos/{id}', [AnunciosController::class, 'listarplanos']); 
     Route::delete('/eplanos/{id}', [AnunciosController::class, 'eliminarplanos']);
     Route::get('/limagenesecundarias/{id}', [AnunciosController::class, 'listaimgsecundarias']); 
-    Route::delete('/eimagenesecundarias/{id}', [AnunciosController::class, 'eliminarimgsecundarias']);
+    Route::delete('/eimagenesecundarias/{id}', [AnunciosController::class, 'eliminarimgsecundariasclub']);
 
     Route::get('/tipos-propiedad', [AnunciosController::class, 'tiposPropiedad']); 
     Route::get('/tipos-operacion', [AnunciosController::class, 'tiposOperacion']); 
@@ -62,6 +62,7 @@ Route::prefix('misanuncios')->middleware('auth:sanctum')->group(function () {
 Route::prefix('planes')->group(function () { 
     Route::get('/listar', [PlanesController::class, 'listarPlanes']); 
     Route::get('/usuario/{id}', [PlanesController::class, 'verificarPlanUsuario']); 
+    Route::get('/listarclub', [PlanesController::class, 'listarPlanesclub']); 
 });
 
 
@@ -102,7 +103,7 @@ Route::prefix('paginaprincipal')->group(function () {
     Route::get('/lpopups', [AdministracionController::class, 'listarPopups']);
     Route::get('/popup-config', [AdministracionController::class, 'getPopupConfig']);
     Route::get('/color', [AdministracionController::class, 'listarcolor']);
-
+    Route::post('/suscripciones', [AnunciosController::class, 'regsuscripciones']); 
 });
 
 
@@ -241,22 +242,22 @@ Route::prefix('aldasaclub')->middleware('auth:sanctum')->group(function () {
     Route::get('/estado-membresia/{id}', [AnunciosController::class, 'getestadomembresia']); 
     Route::get('/listardetalle/{id}', [AnunciosController::class, 'listardetalleprincipalclub']);
 
-    Route::get('/lplanos/{id}', [AnunciosController::class, 'listarplanos']); 
-    Route::delete('/eplanos/{id}', [AnunciosController::class, 'eliminarplanos']);
-    Route::get('/limagenesecundarias/{id}', [AnunciosController::class, 'listaimgsecundarias']); 
+    Route::get('/lplanos/{id}', [AnunciosController::class, 'listarplanosclub']); 
+    Route::delete('/eplanos/{id}', [AnunciosController::class, 'eliminarplanosclub']);
+    Route::get('/limagenesecundarias/{id}', [AnunciosController::class, 'listaimgsecundariasclub']); 
     Route::delete('/eimagenesecundarias/{id}', [AnunciosController::class, 'eliminarimgsecundarias']);
 
     Route::get('/tipos-propiedad', [AnunciosController::class, 'tiposPropiedad']); 
     Route::get('/tipos-operacion', [AnunciosController::class, 'tiposOperacion']); 
     Route::get('/tipos-ubicaciones', [AnunciosController::class, 'tiposUbicaciones']); 
-    Route::post('/registrar', [AnunciosController::class, 'registraranuncio']);
+    Route::post('/registrar', [AnunciosController::class, 'registraranuncioclub']);
     Route::get('/listar/{is_publish}/{id}', [AnunciosController::class, 'listaranuncioaldasaclub']); 
-    Route::put('/actualizar/{id}', [AnunciosController::class, 'actualizaranuncio']); 
-    Route::get('/caracteristicas-catalogo/{tpropiedad}', [AnunciosController::class, 'categoriasCatalogo']); 
-    Route::get('/caracteristicas-catalogoid/{id}', [AnunciosController::class, 'categoriasCatalogoid']); 
-    Route::get('/propiedad_amenities/{tpropiedad}', [AnunciosController::class, 'amenities']); 
-    Route::get('/propiedad_amenitiesid/{id}', [AnunciosController::class, 'amenitiesid']); 
- 
+    Route::put('/actualizar/{id}', [AnunciosController::class, 'actualizaranuncioclub']); 
+    Route::get('/caracteristicas-catalogo/{tpropiedad}', [AnunciosController::class, 'categoriasCatalogoclub']); 
+    Route::get('/caracteristicas-catalogoid/{id}', [AnunciosController::class, 'categoriasCatalogoidclub']); 
+    Route::get('/propiedad_amenities/{tpropiedad}', [AnunciosController::class, 'amenitiesclub']); 
+    Route::get('/propiedad_amenitiesid/{id}', [AnunciosController::class, 'amenitiesidclub']); 
+  
     Route::get('/mensajes-anuncio/{id}', [AnunciosController::class, 'getMensajeanuncio']); 
     Route::get('/anuncio-favoritos/{id}', [AnunciosController::class, 'getanunciosFavoritos']); 
     Route::get('/monedas', [AnunciosController::class, 'getmonedas']);

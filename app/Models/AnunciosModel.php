@@ -1344,6 +1344,222 @@ class AnunciosModel extends Model
             ]);
     }
 
+
+    public static function listarplanosclub($id)
+    {
+        return DB::select("SELECT * FROM propiedad_planosclub WHERE propiedad_id= $id AND is_active = 1 ORDER BY id ASC");
+    }
+
+    public static function categoriasCatalogoidclub($id)
+    {
+        return DB::select("SELECT pc.id, pc.caracteristica_id, pc.valor, cc.nombre, cc.icono, pc.is_active FROM propiedad_caracteristicasclub pc INNER JOIN caracteristicas_catalogoclub cc on pc.caracteristica_id = cc.id WHERE pc.propiedad_id = $id AND pc.is_active = 1");
+    }
     
+
+    public static function amenitiesidclub($id)
+    {
+        return DB::select("SELECT pa.id, pa.amenity_id, a.nombre, a.icon_url, pa.is_active FROM propiedad_amenitiesclub pa INNER JOIN amenitiesclub a on pa.amenity_id = a.id WHERE pa.propiedad_id = $id AND pa.is_active = 1");
+    }
+
+    public static function listaimgsecundariasclub($id)
+    {
+        return DB::select("SELECT * FROM propiedad_imagenesclub WHERE propiedad_id= $id AND is_active = 1 ORDER BY id ASC");
+    }
+
+    public static function categoriasCatalogoclub($tpropiedad)
+    {
+        return DB::select("SELECT * FROM caracteristicas_catalogoclub WHERE tpropiedad_id = $tpropiedad AND is_active = 1 ORDER BY nombre ASC");
+    }
+
+    public static function amenitiesclub($tpropiedad)
+    {
+        return DB::select("SELECT * FROM amenitiesclub WHERE tpropiedad_id = $tpropiedad AND  is_active = 1 ORDER BY nombre ASC");
+    }
+
+    public static function actualizarAnuncioclub($id, $data, $rutaImagen = null)
+    {
+        DB::table('propiedadesclub')
+            ->where('id', $id)
+            ->update([
+                'tipo_id' => $data['tipo_id'],
+                'operacion_id' => $data['operacion_id'],
+                'ubicacion_id' => $data['ubicacion_id'],
+                'moneda_id' => $data['moneda_id'],
+                'titulo' => $data['titulo'],
+                'descripcion' => $data['descripcion'],
+                'precio' => $data['precio'],
+                'imagen_principal' => $rutaImagen,
+                'direccion' => $data['direccion'],
+                //'is_active_publish' => 0,
+                'updated_at' => now(),
+            ]);
+    }
+
+    public static function guardarCaracteristicasclub($propiedadId, $caracteristicas)
+    {
+        // Obtener todas las características actuales de la propiedad
+        $caracActuales = DB::table('propiedad_caracteristicasclub')
+            ->where('propiedad_id', $propiedadId)
+            ->pluck('valor', 'caracteristica_id') // ['id_carac' => 'valor']
+            ->toArray();
+
+        // IDs de las características enviadas desde el frontend
+        $idsEnviados = array_map(fn($c) => $c['id'], $caracteristicas);
+
+        // 1️⃣ Insertar nuevas y actualizar existentes
+        foreach ($caracteristicas as $carac) {
+            $id = $carac['id'];
+            $valor = $carac['valor'] ?? '';
+
+            if (array_key_exists($id, $caracActuales)) {
+                // Ya existe → actualizar valor si cambió
+                if ($caracActuales[$id] !== $valor) {
+                    DB::table('propiedad_caracteristicasclub')
+                        ->where('propiedad_id', $propiedadId)
+                        ->where('caracteristica_id', $id)
+                        ->update([
+                            'valor' => $valor,
+                            'updated_at' => now(),
+                        ]);
+                }
+            } else {
+                // No existe → insertar
+                DB::table('propiedad_caracteristicasclub')->insert([
+                    'propiedad_id' => $propiedadId,
+                    'caracteristica_id' => $id,
+                    'valor' => $valor,
+                    'is_active' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        // 2️⃣ Eliminar las características que fueron desmarcadas
+        $idsAEliminar = array_diff(array_keys($caracActuales), $idsEnviados);
+        if (!empty($idsAEliminar)) {
+            DB::table('propiedad_caracteristicasclub')
+                ->where('propiedad_id', $propiedadId)
+                ->whereIn('caracteristica_id', $idsAEliminar)
+                ->delete();
+        }
+    }
+
+    public static function guardarCaracteristicassecundariasclub($propiedadId, $caracteristicas_secundarias)
+    {
+        // Obtener todas las amenities actuales de la propiedad
+        $caracActuales = DB::table('propiedad_amenitiesclub')
+            ->where('propiedad_id', $propiedadId)
+            ->pluck('is_active', 'amenity_id') // ['id_amenity' => is_active]
+            ->toArray();
+
+        // IDs de las características enviadas desde el frontend
+        $idsEnviados = array_map(fn($c) => $c['id'], $caracteristicas_secundarias);
+
+        // 1️⃣ Insertar nuevas o reactivar existentes
+        foreach ($caracteristicas_secundarias as $carac) {
+            $id = $carac['id'];
+
+            if (array_key_exists($id, $caracActuales)) {
+                // Ya existe → reactivar si estaba inactiva
+                if ($caracActuales[$id] == 0) {
+                    DB::table('propiedad_amenitiesclub')
+                        ->where('propiedad_id', $propiedadId)
+                        ->where('amenity_id', $id)
+                        ->update([
+                            'is_active' => 1,
+                            'updated_at' => now(),
+                        ]);
+                }
+            } else {
+                // No existe → insertar
+                DB::table('propiedad_amenitiesclub')->insert([
+                    'propiedad_id' => $propiedadId,
+                    'amenity_id' => $id,
+                    'is_active' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        // 2️⃣ Desactivar las que fueron desmarcadas
+        $idsAEliminar = array_diff(array_keys($caracActuales), $idsEnviados);
+        if (!empty($idsAEliminar)) {
+            DB::table('propiedad_amenitiesclub')
+                ->where('propiedad_id', $propiedadId)
+                ->whereIn('amenity_id', $idsAEliminar)
+                ->update([
+                    'is_active' => 0,
+                    'updated_at' => now(),
+                ]);
+        }
+    }
+
+    public static function guardarPlanosclub($id, $titulo, $nombrePlano)
+    {
+        return DB::table('propiedad_planosclub')->insert([
+                            'propiedad_id' => $id,
+                            'titulo' => $titulo,
+                            'imagen' => 'planos/' . $nombrePlano,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+    } 
+
+
+    public static function guardarImagenesclub($idPropiedad, $titulo, $nombreArchivo)
+    {
+        return DB::table('propiedad_imagenesclub')->insert([
+            'propiedad_id' => $idPropiedad,
+            'titulo' => $titulo,
+            'imagen' => 'propiedades_imagenesclub/' . $nombreArchivo,
+            'is_active' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    public static function guardarvideourlclub($idPropiedad, $url)
+    {
+        return DB::table('propiedad_videosclub')->insert([
+            'propiedad_id' => $idPropiedad,
+            'titulo' => '',
+            'url' => $url,
+            'tipo' => 'youtube',
+            'is_active' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    public static function crearAnuncioclub($data, $rutaImagen = null)
+    {
+        return DB::table('propiedadesclub')->insertGetId([
+            'tipo_id' => $data['tipo_id'],
+            'operacion_id' => $data['operacion_id'],
+            'ubicacion_id' => $data['ubicacion_id'],
+            'moneda_id' => $data['moneda_id'],
+            'titulo' => $data['titulo'],
+            'direccion' => $data['direccion'],
+            'descripcion' => $data['descripcion'],
+            'precio' => $data['precio'],
+            'imagen_principal' => $rutaImagen,
+            'user_id' => $data['user_id'],
+            
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    public static function eliminarplanosclub($id)
+    {
+        return DB::update("UPDATE propiedad_planosclub SET is_active = 0 WHERE id = ?", [$id]);
+    }
+
+    public static function eliminarimgsecundariasclub($id)
+    {
+        return DB::update("UPDATE propiedad_imagenesclub SET is_active = 0 WHERE id = ?", [$id]);
+    }
 
 }

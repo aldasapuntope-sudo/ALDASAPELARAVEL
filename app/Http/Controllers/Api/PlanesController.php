@@ -20,5 +20,13 @@ class PlanesController extends Controller
         $resultado = PlanesModel::verificarPlanUsuario($usuario);
         return response()->json($resultado);
     }
+
+    public function listarPlanesclub()
+    {
+        $resultado = PlanesModel::listarPlanesclub();
+        return response()->json($resultado);
+    }
+
+    
     
 }

@@ -54,5 +54,14 @@ class PlanesModel extends Model
             'plan' => $plan
         ]);
     }
+
+    public static function listarPlanesclub()
+    {
+       return DB::select(
+            "SELECT * FROM planesclub WHERE is_active = 1 "
+        );
+    }
+
+    
     
 }
