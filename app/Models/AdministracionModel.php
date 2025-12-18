@@ -39,6 +39,12 @@ class AdministracionModel extends Model
         return DB::select('SELECT * FROM planes');
     }
 
+    public static function listarplanescomboxclub()
+    {
+        return DB::select('SELECT * FROM planesclub');
+    }
+
+
     public static function tiposPropiedad()
     {
         return DB::select('SELECT * FROM tipos_propiedad');
@@ -692,5 +698,183 @@ class AdministracionModel extends Model
 
 
 
+    //CRUD MODULO PLANES CLUB
+
+    public static function listarPlanesclub()
+    {
+        return DB::select('SELECT * FROM planesclub');
+    }
+
+    public static function crearPlanclub($data)
+    {
+        return DB::table('planesclub')->insertGetId([
+            'nombre' => $data['nombre'],
+            'descripcion' => $data['descripcion'] ?? '',
+            'precio' => $data['precio'],
+            'duracion_dias' => $data['duracion_dias'],
+            'is_active' => $data['is_active'] ?? 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    public static function actualizarPlanclub($id, $data)
+    {
+        DB::table('planesclub')
+            ->where('id', $id)
+            ->update([
+                'nombre' => $data['nombre'],
+                'descripcion' => $data['descripcion'] ?? '',
+                'precio' => $data['precio'],
+                'duracion_dias' => $data['duracion_dias'],
+                'is_active' => $data['is_active'] ?? 1,
+                'updated_at' => now(),
+            ]);
+    }
+    
+
+    public static function eliminarPlanclub($id, $data)
+    {
+        DB::table('planesclub')
+            ->where('id', $id)
+            ->update([
+                'nombre' => $data['nombre'],
+                'descripcion' => $data['descripcion'] ?? '',
+                'precio' => $data['precio'],
+                'duracion_dias' => $data['duracion_dias'],
+                'is_active' => $data['is_active'] ?? 1,
+                'updated_at' => now(),
+            ]);
+    }
+
+
+    // ================================
+    // PLANES DE USUARIOS CLUB
+    // ================================
+
+    public static function listarPlanesUsuarioclub()
+    {
+        return DB::table('usuarios_planesclub AS up')
+            ->join('usuario AS u', 'up.user_id', '=', 'u.id')
+            ->join('planesclub AS p', 'up.plan_id', '=', 'p.id')
+            ->select(
+                'up.id',
+                'u.nombre AS usuario',
+                'p.nombre AS plan',
+                'up.fecha_inicio',
+                'up.fecha_fin',
+                'up.anuncios_disponibles',
+                'up.estado',
+                'up.user_id',
+                'plan_id'
+            )
+            ->orderBy('up.id', 'desc')
+            ->get();
+    }
+
+    public static function crearPlanUsuarioclub($data)
+    {
+        return DB::table('usuarios_planesclub')->insertGetId([
+            'user_id' => $data['usuario_id'],
+            'plan_id' => $data['plan_id'],
+            'fecha_inicio' => $data['fecha_inicio'],
+            'fecha_fin' => $data['fecha_fin'],
+            'anuncios_disponibles' => $data['anuncios_disponibles'] ?? 0,
+            'estado' => $data['estado'] ?? 'activo',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    public static function actualizarPlanUsuarioclub($id, $data)
+    {
+        return DB::table('usuarios_planesclub')->where('id', $id)->update([
+            'plan_id' => $data['plan_id'],
+            'fecha_inicio' => date('Y-m-d H:i:s', strtotime($data['fecha_inicio'])),
+            'fecha_fin' => date('Y-m-d H:i:s', strtotime($data['fecha_fin'])),
+            'anuncios_disponibles' => $data['anuncios_disponibles'] ?? 0,
+            'estado' => $data['estado'] ?? 'activo',
+            'updated_at' => now(),
+        ]);
+    }
+
+
+    // CRUD para CARACTERÍSTICAS CATALOGO CLUB
+    public static function listarCaracteristicasCatalogoclub()
+    {
+        return DB::select('
+            SELECT c.*, p.nombre AS propiedad_titulo
+            FROM caracteristicas_catalogoclub c
+            INNER JOIN tipos_propiedad p ON c.tpropiedad_id = p.id
+        ');
+    }
+
+    public static function registrarCaracteristicaCatalogoclub($data)
+    {
+        DB::table('caracteristicas_catalogoclub')->insert([
+            'nombre' => $data['nombre'],
+            'tipo' => $data['tipo'],
+            'icono' => $data['icono'],
+            'unidad' => $data['unidad'],
+            'tpropiedad_id' => $data['tpropiedad_id'],
+            'is_active' => $data['is_active'] ?? 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    public static function actualizarCaracteristicaCatalogoclub($id, $data, $rutaIcono)
+    {
+        // Obtener el registro actual
+        $caracteristica = DB::table('caracteristicas_catalogoclub')->where('id', $id)->first();
+
+        // Si no se envía icono, mantener el valor actual
+        $icono = $data['icono'] ?? $caracteristica->icono;
+
+        DB::table('caracteristicas_catalogoclub')
+            ->where('id', $id)
+            ->update([
+                'nombre' => $data['nombre'],
+                'icono' => $rutaIcono,
+                'unidad' => $data['unidad'],
+                'tpropiedad_id' => $data['tpropiedad_id'],
+                'is_active' => $data['is_active'] ?? 1,
+                'updated_at' => now(),
+            ]);
+    }
+
+
+    //CURD MODULO AMENIDADES
+    public static function listarAmenitiesclub()
+    {
+        return DB::select(' SELECT 
+            a.*, 
+            p.nombre AS propiedad_titulo
+        FROM amenitiesclub a
+        INNER JOIN  tipos_propiedad p ON a.tpropiedad_id = p.id');
+    }
+
+    public static function registrarAmenityclub($data)
+    {
+        DB::table('amenitiesclub')->insert([
+            'nombre' => $data['nombre'],
+            'tpropiedad_id' => $data['tpropiedad_id'],
+            'is_active' => 1,
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+    }
+
+    public static function actualizarAmenityclub($id, $data)
+    {
+        DB::table('amenitiesclub')
+            ->where('id', $id)
+            ->update([
+                'nombre' => $data['nombre'],
+                'tpropiedad_id' => $data['tpropiedad_id'],
+                'is_active' => $data['is_active'] ?? 1,
+                'updated_at' => now()
+            ]);
+    }
 
 }

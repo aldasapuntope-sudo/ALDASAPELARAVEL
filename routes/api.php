@@ -112,19 +112,31 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
 
     Route::get('/lusuarioscombobx', [AdministracionController::class, 'listarusuarioscombox']); 
     Route::get('/lplanescombox', [AdministracionController::class, 'listarplanescombox']); 
+     Route::get('/lplanescomboxclub', [AdministracionController::class, 'listarplanescomboxclub']); 
     Route::get('/lperfilescombox', [AdministracionController::class, 'listarperfilescombox']); 
     Route::get('/ltipodocumentoscombox', [AdministracionController::class, 'listardocumentoscombox']); 
+
     //RUTA DE PLANES
     Route::get('/lplanes', [AdministracionController::class, 'listarPlanes']); 
     Route::put('/aplanes/{id}', [AdministracionController::class, 'actualizarPlanes']); 
     Route::post('/rplanes', [AdministracionController::class, 'registrarPlanes']); 
     Route::put('/eplanes/{id}/estado', [AdministracionController::class, 'cambiarEstadoPlan']); 
+    //RUTA DE PLANES CLUB
+    Route::get('/lplanesclub', [AdministracionController::class, 'listarPlanesclub']); 
+    Route::put('/aplanesclub/{id}', [AdministracionController::class, 'actualizarPlanesclub']); 
+    Route::post('/rplanesclub', [AdministracionController::class, 'registrarPlanesclub']); 
+    Route::put('/eplanesclub/{id}/estado', [AdministracionController::class, 'cambiarEstadoPlanclub']); 
 
     // RUTA DE PLANES DE USUARIOS
     Route::get('/lplanes_usuario', [AdministracionController::class, 'listarPlanesUsuario']);
     Route::put('/aplanes_usuario/{id}', [AdministracionController::class, 'actualizarPlanesUsuario']);
     Route::post('/rplanes_usuario', [AdministracionController::class, 'registrarPlanesUsuario']);
     Route::put('/eplanes_usuario/{id}/estado', [AdministracionController::class, 'cambiarEstadoPlanesUsuario']);
+    // RUTA DE PLANES DE USUARIOS CLUB
+    Route::get('/lplanes_usuarioclub', [AdministracionController::class, 'listarPlanesUsuarioclub']);
+    Route::put('/aplanes_usuarioclub/{id}', [AdministracionController::class, 'actualizarPlanesUsuarioclub']);
+    Route::post('/rplanes_usuarioclub', [AdministracionController::class, 'registrarPlanesUsuarioclub']);
+    Route::put('/eplanes_usuarioclub/{id}/estado', [AdministracionController::class, 'cambiarEstadoPlanesUsuarioclub']);
 
 
     //RUTA CURD DE TIPO DE DOCUMENTO
@@ -138,6 +150,12 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
     Route::post('/ramenities', [AdministracionController::class, 'registrarAmenity']);
     Route::put('/aamenities/{id}', [AdministracionController::class, 'actualizarAmenity']);
     Route::put('/eamenities/{id}/estado', [AdministracionController::class, 'cambiarEstadoAmenity']);
+ 
+    // Amenidades CLUB
+    Route::get('/lamenitiesclub', [AdministracionController::class, 'listarAmenitiesclub']);
+    Route::post('/ramenitiesclub', [AdministracionController::class, 'registrarAmenityclub']);
+    Route::put('/aamenitiesclub/{id}', [AdministracionController::class, 'actualizarAmenityclub']);
+    Route::put('/eamenitiesclub/{id}/estado', [AdministracionController::class, 'cambiarEstadoAmenityclub']);
 
     // Características catálogo
     Route::get('/lcaracteristicas', [AdministracionController::class, 'listarCaracteristicasCatalogo']);
@@ -145,6 +163,12 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
     Route::put('/acaracteristica/{id}', [AdministracionController::class, 'actualizarCaracteristicaCatalogo']);
     Route::put('/ecaracteristica/{id}/estado', [AdministracionController::class, 'cambiarEstadoCaracteristicaCatalogo']);
     Route::get('/tipos-propiedad', [AdministracionController::class, 'tiposPropiedad']);
+     // Características catálogo CLUB
+    Route::get('/lcaracteristicasclub', [AdministracionController::class, 'listarCaracteristicasCatalogoclub']);
+    Route::post('/rcaracteristicaclub', [AdministracionController::class, 'registrarCaracteristicaCatalogoclub']);
+    Route::put('/acaracteristicaclub/{id}', [AdministracionController::class, 'actualizarCaracteristicaCatalogoclub']);
+    Route::put('/ecaracteristicaclub/{id}/estado', [AdministracionController::class, 'cambiarEstadoCaracteristicaCatalogoclub']);
+   
     
     //RUTAS CRUD OPERACIONES
     Route::get('/loperaciones', [AdministracionController::class, 'listarOperaciones']); // Listar todas las operaciones

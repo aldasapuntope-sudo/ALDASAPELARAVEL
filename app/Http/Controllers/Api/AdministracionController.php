@@ -47,6 +47,12 @@ class AdministracionController extends Controller
         return response()->json(AdministracionModel::listarplanescombox());
     }
 
+    public function listarplanescomboxclub()
+    {
+        return response()->json(AdministracionModel::listarplanescomboxclub());
+    }
+
+
     public function obtenerConfiguraciones()
     {
         try {
@@ -205,6 +211,8 @@ class AdministracionController extends Controller
             return response()->json(['estado' => 0, 'mensaje' => 'Error al cambiar estado del plan', 'detalle' => $e->getMessage()], 500);
         }
     }
+
+
 
 
 
@@ -1517,4 +1525,351 @@ class AdministracionController extends Controller
 
 
 
+
+     // ---------------------------------------------------------
+    // CRUD PLANES CLUB
+    // ---------------------------------------------------------
+    public function listarPlanesclub()
+    {
+        return response()->json(AdministracionModel::listarPlanesclub());
+    }
+
+    public function registrarPlanesclub(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:255',
+                'descripcion' => 'nullable|string|max:255',
+                'precio' => 'required|numeric|min:0',
+                'duracion_dias' => 'required|integer|min:1',
+                'is_active' => 'boolean',
+            ]);
+
+            $idPlan = AdministracionModel::crearPlanclub($validated);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Crear', 'planesclub', $idPlan, 'Se creó el plan: ' . $validated['nombre']);
+
+            return response()->json(['estado' => 1, 'mensaje' => 'Plan registrado correctamente.', 'id' => $idPlan], 201);
+        } catch (\Exception $e) {
+            return response()->json(['estado' => 0, 'mensaje' => 'Error al registrar el plan', 'detalle' => $e->getMessage()], 500);
+        }
+    }
+
+    public function actualizarPlanesclub(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:255',
+                'descripcion' => 'nullable|string|max:255',
+                'precio' => 'required|numeric|min:0',
+                'duracion_dias' => 'required|integer|min:1',
+                'is_active' => 'boolean',
+            ]);
+
+            AdministracionModel::actualizarPlanclub($id, $validated);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Actualizar', 'planesclub', $id, 'Se actualizó el plan: ' . $validated['nombre']);
+
+            return response()->json(['estado' => 1, 'mensaje' => 'Plan actualizado correctamente.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['estado' => 0, 'mensaje' => 'Error al actualizar el plan', 'detalle' => $e->getMessage()], 500);
+        }
+    }
+
+    public function cambiarEstadoPlanclub($id, Request $request)
+    {
+        try {
+            $validated = $request->validate(['is_active' => 'required|boolean']);
+
+            DB::table('planesclub')->where('id', $id)->update([
+                'is_active' => $validated['is_active'],
+                'updated_at' => now(),
+            ]);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Actualizar', 'planesclub', $id, 'Se cambió el estado del plan.');
+
+            return response()->json(['estado' => 1, 'mensaje' => 'Estado actualizado correctamente.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['estado' => 0, 'mensaje' => 'Error al cambiar estado del plan', 'detalle' => $e->getMessage()], 500);
+        }
+    }
+
+    // ================================
+    // PLANES DE USUARIOS CLUB
+    // ================================
+
+    public function listarPlanesUsuarioclub()
+    {
+        return response()->json(AdministracionModel::listarPlanesUsuarioclub());
+    }
+
+    public function registrarPlanesUsuarioclub(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'usuario_id' => 'required|integer|exists:usuarios,id',
+                'plan_id' => 'required|integer|exists:planes,id',
+                'fecha_inicio' => 'required|date',
+                'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+                'anuncios_disponibles' => 'nullable|integer|min:0',
+                'estado' => 'nullable|string|in:activo,inactivo',
+            ]);
+
+            $idPlanUsuario = AdministracionModel::crearPlanUsuarioclub($validated);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Crear', 'planes_usuarioclub', $idPlanUsuario, 'Se asignó un plan a un usuario.');
+
+            return response()->json(['estado' => 1, 'mensaje' => 'Plan de usuario registrado correctamente.', 'id' => $idPlanUsuario], 201);
+        } catch (\Exception $e) {
+            return response()->json(['estado' => 0, 'mensaje' => 'Error al registrar el plan de usuario', 'detalle' => $e->getMessage()], 500);
+        }
+    }
+
+    public function actualizarPlanesUsuarioclub(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'plan_id' => 'required|integer|exists:planes,id',
+                'fecha_inicio' => 'required|date',
+                'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+                'anuncios_disponibles' => 'nullable|integer|min:0',
+                'estado' => 'required|in:activo,vencido',
+            ]);
+
+            AdministracionModel::actualizarPlanUsuarioclub($id, $validated);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Actualizar', 'planes_usuarioclub', $id, 'Se actualizó el plan de usuario.');
+
+            return response()->json(['estado' => 1, 'mensaje' => 'Plan de usuario actualizado correctamente.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['estado' => 0, 'mensaje' => 'Error al actualizar el plan de usuario', 'detalle' => $e->getMessage()], 500);
+        }
+    }
+
+    public function cambiarEstadoPlanesUsuarioclub($id, Request $request)
+    {
+        try {
+            $validated = $request->validate(['estado' => 'required|string|in:activo,inactivo']);
+
+            DB::table('usuarios_planesclub')->where('id', $id)->update([
+                'estado' => $validated['estado'],
+                'updated_at' => now(),
+            ]);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Actualizar', 'planes_usuarioclub', $id, 'Se cambió el estado del plan de usuario.');
+
+            return response()->json(['estado' => 1, 'mensaje' => 'Estado del plan de usuario actualizado correctamente.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['estado' => 0, 'mensaje' => 'Error al cambiar estado del plan de usuario', 'detalle' => $e->getMessage()], 500);
+        }
+    }
+
+
+     // ---------------------------------------------------------
+    // CRUD CARACTERÍSTICAS CATALOGO CLUB
+    // ---------------------------------------------------------
+    public function listarCaracteristicasCatalogoclub()
+    {
+        return response()->json(AdministracionModel::listarCaracteristicasCatalogoclub());
+    }
+
+    /*public function registrarCaracteristicaCatalogo(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:255',
+                'unidad' => 'required|string|max:50',
+                'tpropiedad_id' => 'required|integer',
+                'is_active' => 'boolean',
+                'icono' => 'nullable|image|mimes:png,jpg,jpeg,svg',
+            ]);
+
+            if ($request->hasFile('icono')) {
+                $path = $request->file('icono')->store('iconos_caracteristicas', 'public');
+                $validated['icono'] = $path;
+            }
+
+            $id = AdministracionModel::registrarCaracteristicaCatalogo($validated);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Crear', 'caracteristicas_catalogo', $id, 'Se registró característica: ' . $validated['nombre']);
+
+            return response()->json(['message' => 'Característica registrada correctamente'], 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al registrar característica: ' . $e->getMessage()], 500);
+        }
+    }*/
+
+    public function registrarCaracteristicaCatalogoclub(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:255',
+                'unidad' => 'required|string|max:50',
+                'tpropiedad_id' => 'required|integer',
+                'is_active' => 'boolean',
+                'icono' => 'nullable|file|mimes:png,jpg,jpeg,svg',
+            ]);
+
+            $rutaIcono = null;
+
+            // ✅ Si se envía un icono, lo guardamos físicamente
+            if ($request->hasFile('icono')) {
+                $archivo = $request->file('icono');
+                $nombre = 'icono_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+
+                // 🔹 Directorio donde se guardarán los iconos
+                $directorio = 'C:/xampp/htdocs/iconosclub';
+
+                if (!file_exists($directorio)) {
+                    mkdir($directorio, 0777, true);
+                }
+
+                // 🔹 Mover archivo físico
+                $archivo->move($directorio, $nombre);
+
+                // 🔹 Ruta que se guarda en la BD (relativa)
+                $rutaIcono = 'iconosclub/' . $nombre;
+            }
+
+            $validated['icono'] = $rutaIcono;
+
+            // ✅ Guardamos la característica en la BD
+            $id = AdministracionModel::registrarCaracteristicaCatalogoclub($validated);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Crear', 'caracteristicas_catalogo', $id, 'Se registró característica: ' . $validated['nombre']);
+
+            return response()->json(['message' => 'Característica registrada correctamente'], 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al registrar característica: ' . $e->getMessage()], 500);
+        }
+    }
+
+
+    public function actualizarCaracteristicaCatalogoclub(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:255',
+                'unidad' => 'nullable|string|max:50',
+                'tpropiedad_id' => 'required|integer',
+                'is_active' => 'boolean',
+                'icono' => 'nullable',
+            ]);
+
+            $rutaIcono = null;
+            if ($request->hasFile('icono')) {
+                $archivo = $request->file('icono');
+                $nombre = 'icono_' . Str::random(10) . '.' . $archivo->getClientOriginalExtension();
+                $directorio = 'C:/xampp/htdocs/iconosclub';
+                if (!file_exists($directorio)) mkdir($directorio, 0777, true);
+                $archivo->move($directorio, $nombre);
+                $rutaIcono = $nombre;
+            } else {
+                $rutaIcono = $request->input('icono_actual');
+            }
+
+            AdministracionModel::actualizarCaracteristicaCatalogoclub($id, $validated, $rutaIcono);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Actualizar', 'caracteristicas_catalogo', $id, 'Se actualizó característica: ' . $validated['nombre']);
+
+            return response()->json(['message' => 'Característica actualizada correctamente'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al actualizar característica: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function cambiarEstadoCaracteristicaCatalogoclub($id, Request $request)
+    {
+        try {
+            $validated = $request->validate(['is_active' => 'required|boolean']);
+
+            DB::table('caracteristicas_catalogoclub')
+                ->where('id', $id)
+                ->update(['is_active' => $validated['is_active'], 'updated_at' => now()]);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Actualizar', 'caracteristicas_catalogoclub', $id, 'Se cambió el estado de la característica.');
+
+            return response()->json(['estado' => 1, 'mensaje' => 'Estado actualizado correctamente.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['estado' => 0, 'mensaje' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+
+
+     // ---------------------------------------------------------
+    // CRUD AMENITIES
+    // ---------------------------------------------------------
+    public function listarAmenitiesclub()
+    {
+        return response()->json(AdministracionModel::listarAmenitiesclub());
+    }
+
+    public function registrarAmenityclub(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:255',
+                'tpropiedad_id' => 'required|integer',
+                'is_active' => 'boolean',
+            ]);
+
+            $id = AdministracionModel::registrarAmenityclub($validated);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Crear', 'amenitiesclub', $id, 'Se registró amenity club: ' . $validated['nombre']);
+
+            return response()->json(['message' => 'Amenity club registrado correctamente'], 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al registrar el amenity: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function actualizarAmenityclub(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:255',
+                'tpropiedad_id' => 'required|integer',
+                'is_active' => 'boolean',
+            ]);
+
+            AdministracionModel::actualizarAmenityclub($id, $validated);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Actualizar', 'amenities club', $id, 'Se actualizó amenity: ' . $validated['nombre']);
+
+            return response()->json(['message' => 'Amenity actualizado correctamente'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al actualizar el amenity: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function cambiarEstadoAmenityclub($id, Request $request)
+    {
+        try {
+            $validated = $request->validate(['is_active' => 'required|boolean']);
+
+            DB::table('amenitiesclub')->where('id', $id)->update([
+                'is_active' => $validated['is_active'],
+                'updated_at' => now(),
+            ]);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora('Actualizar', 'amenities club', $id, 'Se cambió el estado del amenity.');
+
+            return response()->json(['estado' => 1, 'mensaje' => 'Estado del servicio actualizado correctamente.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['estado' => 0, 'mensaje' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
 }
