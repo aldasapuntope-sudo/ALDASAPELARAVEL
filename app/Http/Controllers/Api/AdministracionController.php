@@ -154,7 +154,8 @@ class AdministracionController extends Controller
         try {
             $validated = $request->validate([
                 'nombre' => 'required|string|max:255',
-                'descripcion' => 'nullable|string|max:255',
+                'descripcion' => 'nullable|string',
+                //'descripcion' => 'nullable|string|max:255',
                 'precio' => 'required|numeric|min:0',
                 'duracion_dias' => 'required|integer|min:1',
                 'is_active' => 'boolean',
@@ -176,7 +177,8 @@ class AdministracionController extends Controller
         try {
             $validated = $request->validate([
                 'nombre' => 'required|string|max:255',
-                'descripcion' => 'nullable|string|max:255',
+                'descripcion' => 'nullable|string',
+                //'descripcion' => 'nullable|string|max:255',
                 'precio' => 'required|numeric|min:0',
                 'duracion_dias' => 'required|integer|min:1',
                 'is_active' => 'boolean',
@@ -1539,7 +1541,8 @@ class AdministracionController extends Controller
         try {
             $validated = $request->validate([
                 'nombre' => 'required|string|max:255',
-                'descripcion' => 'nullable|string|max:255',
+                'descripcion' => 'nullable|string',
+                //'descripcion' => 'nullable|string|max:255',
                 'precio' => 'required|numeric|min:0',
                 'duracion_dias' => 'required|integer|min:1',
                 'is_active' => 'boolean',
@@ -1561,7 +1564,8 @@ class AdministracionController extends Controller
         try {
             $validated = $request->validate([
                 'nombre' => 'required|string|max:255',
-                'descripcion' => 'nullable|string|max:255',
+                //'descripcion' => 'nullable|string|max:255',
+                'descripcion' => 'nullable|string',
                 'precio' => 'required|numeric|min:0',
                 'duracion_dias' => 'required|integer|min:1',
                 'is_active' => 'boolean',
