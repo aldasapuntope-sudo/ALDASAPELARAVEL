@@ -687,7 +687,8 @@ class AnunciosController extends Controller
             ->where('p.is_active_publish', 1);
 
         if ($tipo) {
-            $query->where('p.tipo_id', $tipo);
+            //$query->where('p.tipo_id', $tipo);
+            $query->where('tp.nombre', 'like', "%{$tipo}%");
         }
 
         if ($q) {
