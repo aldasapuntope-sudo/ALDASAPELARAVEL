@@ -34,8 +34,8 @@ Route::prefix('miperfil')->group(function () {
     Route::put('/actualizar/{id}', [UsuarioController::class, 'actualizarperfil']); 
 });
 
-Route::prefix('misanuncios')->middleware('auth:sanctum')->group(function () {
-//Route::prefix('misanuncios')->group(function () {
+//Route::prefix('misanuncios')->middleware('auth:sanctum')->group(function () {
+Route::prefix('misanuncios')->group(function () {
     Route::get('/lplanos/{id}', [AnunciosController::class, 'listarplanos']); 
     Route::delete('/eplanos/{id}', [AnunciosController::class, 'eliminarplanos']);
     Route::get('/limagenesecundarias/{id}', [AnunciosController::class, 'listaimgsecundarias']); 
