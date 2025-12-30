@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\PlanesController;
 use App\Http\Controllers\Api\AdministracionController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\MenuController;
+use App\Http\Controllers\Api\ChatController;
 
 
 
@@ -289,6 +290,10 @@ Route::prefix('aldasaclub')->middleware('auth:sanctum')->group(function () {
     Route::post('/vendido/{id}', [AnunciosController::class, 'actualizarvendidoclub']); 
 });
 
+Route::prefix('chat')->group(function () { 
+    Route::post('/enviar', [ChatController::class, 'enviar']);
+    Route::get('/listar/{session}', [ChatController::class, 'listar']);
+});
 
 Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink']);
 Route::get('/reset-password/{token}', [PasswordResetController::class, 'validateToken']);
