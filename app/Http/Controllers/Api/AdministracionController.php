@@ -40,7 +40,24 @@ class AdministracionController extends Controller
         return response()->json(AdministracionModel::listardocumentoscombox());
     }
 
+    public function listarmotivosoporteayuda()
+    {
+        return response()->json(AdministracionModel::listarmotivosoporteayuda());
+    }
 
+    
+    public function registrarticketssoprote(Request $request, $id)
+    {
+        $request->validate([
+            'soporte_motivo_id' => 'required|exists:soporte_motivos,id',
+            'titulo' => 'required|string|max:200',
+            'descripcion' => 'required|string',
+        ]);
+
+        $resultado = AdministracionModel::registrarticketssoprote($request, $id);
+
+        return response()->json($resultado);
+    }
     
     public function listarplanescombox()
     {

@@ -68,6 +68,8 @@ Route::prefix('planes')->group(function () {
 
 
 Route::prefix('paginaprincipal')->group(function () { 
+    Route::get('/motivosoporteayuda', [AdministracionController::class, 'listarmotivosoporteayuda']); 
+    Route::post('/ticketssoporteyayuda/{id}', [AdministracionController::class, 'registrarticketssoprote']);
     Route::post('/actualizar-perfil/{id}', [AdministracionController::class, 'subirperfilusuario']);
     Route::get('/sliders', [AdministracionController::class, 'obtenersliders']);
     Route::get('/obtener-configuraciones', [AdministracionController::class, 'obtenerConfiguraciones']);
@@ -116,7 +118,7 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
      Route::get('/lplanescomboxclub', [AdministracionController::class, 'listarplanescomboxclub']); 
     Route::get('/lperfilescombox', [AdministracionController::class, 'listarperfilescombox']); 
     Route::get('/ltipodocumentoscombox', [AdministracionController::class, 'listardocumentoscombox']); 
-
+    
     //RUTA DE PLANES
     Route::get('/lplanes', [AdministracionController::class, 'listarPlanes']); 
     Route::put('/aplanes/{id}', [AdministracionController::class, 'actualizarPlanes']); 

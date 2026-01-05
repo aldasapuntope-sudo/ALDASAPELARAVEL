@@ -19,6 +19,38 @@ class AdministracionModel extends Model
         return DB::select("SELECT * FROM tipos_documento");
     }
 
+    public static function listarmotivosoporteayuda()
+    {
+        return DB::select("SELECT * FROM soporte_motivos WHERE is_active = 1");
+    }
+
+    public static function registrarticketssoprote($request, $user_id)
+    {
+        try {
+            $id = DB::table('soporte_tickets')->insertGetId([
+                'user_id' => $user_id,
+                'soporte_motivo_id' => $request->soporte_motivo_id,
+                'titulo' => $request->titulo,
+                'descripcion' => $request->descripcion,
+                'estado' => 'pendiente',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Ticket registrado correctamente',
+                'ticket_id' => $id
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Error al registrar el ticket',
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
 
     public static function listarusuarioscombox()
     {
