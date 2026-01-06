@@ -54,10 +54,12 @@ Route::prefix('misanuncios')->group(function () {
     Route::get('/propiedad_amenitiesid/{id}', [AnunciosController::class, 'amenitiesid']); 
  
     Route::get('/mensajes-anuncio/{id}', [AnunciosController::class, 'getMensajeanuncio']); 
+    Route::get('/mensajes-soporte/{id}', [AnunciosController::class, 'getMensajesoporte']); 
     Route::get('/anuncio-favoritos/{id}', [AnunciosController::class, 'getanunciosFavoritos']); 
     Route::get('/monedas', [AnunciosController::class, 'getmonedas']);
 
     Route::post('/vendido/{id}', [AnunciosController::class, 'actualizarvendido']); 
+    
 });
 
 Route::prefix('planes')->group(function () { 
@@ -236,6 +238,10 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
     //CRUD MODULO POPUPS CONFIGURACION
     Route::get('/lpopupconfig', [AdministracionController::class, 'listarPopupConfig']);
     Route::put('/apopupconfig/{id}', [AdministracionController::class, 'actualizarPopupConfig']);
+
+
+    //CONSULTAS EXTRAS 
+    Route::get('/lmensajecontactos/{id}', [AdministracionController::class, 'listarmensajecontactos']);
 });
 
 

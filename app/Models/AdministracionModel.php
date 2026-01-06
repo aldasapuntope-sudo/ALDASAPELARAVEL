@@ -909,4 +909,12 @@ class AdministracionModel extends Model
             ]);
     }
 
+    public static function listarmensajecontactos($id)
+    {
+        return DB::select("
+            SELECT msgc.id, CONCAT(usu.nombre, ' ', usu.apellido) as nombrecompleto, p.titulo, p.descripcion, p.id as idpropiedad, p.direccion, usu.telefono_movil, usu.telefono, p.imagen_principal FROM mensajes_contacto msgc inner join propiedades p on msgc.anuncio_id = p.id inner join usuario usu on p.user_id = usu.id WHERE msgc.dni = ? ORDER BY msgc.id DESC;
+        ", [$id]);
+    }
+ 
+
 }

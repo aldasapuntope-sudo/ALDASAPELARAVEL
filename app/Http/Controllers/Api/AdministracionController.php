@@ -1893,4 +1893,13 @@ class AdministracionController extends Controller
             return response()->json(['estado' => 0, 'mensaje' => 'Error: ' . $e->getMessage()], 500);
         }
     }
-}
+
+
+
+
+    
+    public function listarmensajecontactos($id)
+    {
+        return response()->json(AdministracionModel::listarmensajecontactos($id));
+    }
+} 

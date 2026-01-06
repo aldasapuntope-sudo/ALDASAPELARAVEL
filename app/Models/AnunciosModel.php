@@ -50,6 +50,17 @@ class AnunciosModel extends Model
         ", [$userId]);
     }
 
+
+    public static function getMensajesoporte($userId)
+    {
+        return DB::select("
+            SELECT * FROM soporte_tickets WHERE user_id = ?
+            ORDER BY id DESC
+        ", [$userId]);
+    }
+
+    
+
     public static function getanunciosFavoritos($userId)
     {
         return DB::select("

@@ -27,6 +27,11 @@ class AnunciosController extends Controller
         return response()->json($resultado);
     }
 
+    public function getMensajesoporte($id)
+    {
+        $resultado = AnunciosModel::getMensajesoporte($id);
+        return response()->json($resultado);
+    }
 
     public function getanunciosFavoritos($id)
     {
