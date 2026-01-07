@@ -90,9 +90,9 @@ class AnunciosModel extends Model
 
 
 
-    public static function sumarVisita($id)
+    public static function sumarVisita($propiedadId, $userId = null)
     {
-        $propiedad = self::find($id);
+        $propiedad = self::find($propiedadId);
 
         if (!$propiedad) {
             return [
@@ -101,17 +101,41 @@ class AnunciosModel extends Model
             ];
         }
 
-        // Incrementa directamente en la tabla 'propiedades'
-        $propiedad->increment('visitas');
+        DB::beginTransaction();
 
-        // Recargar el modelo para obtener el valor actualizado
-        $propiedad->refresh();
+        try {
+            // 1️⃣ Incrementar contador
+            $propiedad->increment('visitas');
 
-        return [
-            'success' => true,
-            'message' => 'Visita registrada correctamente',
-            'visitas' => $propiedad->visitas
-        ];
+            // 2️⃣ Registrar historial si hay usuario
+            if ($userId) {
+                DB::table('propiedad_visitas')->updateOrInsert(
+                    [
+                        'user_id' => $userId,
+                        'propiedad_id' => $propiedadId,
+                    ],
+                    [
+                        'created_at' => now()
+                    ]
+                );
+            }
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'message' => 'Visita registrada correctamente',
+                'visitas' => $propiedad->visitas + 1
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return [
+                'success' => false,
+                'message' => 'Error al registrar visita',
+                'error' => $e->getMessage()
+            ];
+        }
     }
 
     public static function listarplanos($id)

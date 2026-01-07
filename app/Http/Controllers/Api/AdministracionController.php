@@ -1902,4 +1902,10 @@ class AdministracionController extends Controller
     {
         return response()->json(AdministracionModel::listarmensajecontactos($id));
     }
+    
+    public function listarvisitaspropiedad($id)
+    {
+        return response()->json(AdministracionModel::listarvisitaspropiedad($id));
+    }
 } 
+ 

@@ -78,7 +78,7 @@ Route::prefix('paginaprincipal')->group(function () {
     Route::get('/tipos-operacion', [AnunciosController::class, 'tiposOperacion']); 
     Route::get('/tipos-propiedad', [AnunciosController::class, 'tiposPropiedad']);
     Route::get('/propiedades/buscar', [AnunciosController::class, 'buscarpropiedad']);
-    Route::post('/propiedades/visita/{id}', [AnunciosController::class, 'sumarVisita']);
+    Route::post('/propiedades/visita/{id}/{idusuario}', [AnunciosController::class, 'sumarVisita']);
     Route::get('/listaranuncios/{is_publish}', [AnunciosController::class, 'listaranuncioprincipal']); 
     Route::get('/listardetalle/{id}', [AnunciosController::class, 'listardetalleprincipal']); 
     Route::get('/tipo-cambio', function () {
@@ -242,8 +242,9 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
 
     //CONSULTAS EXTRAS 
     Route::get('/lmensajecontactos/{id}', [AdministracionController::class, 'listarmensajecontactos']);
+    Route::get('/lhistorialvisitapropiedad/{id}', [AdministracionController::class, 'listarvisitaspropiedad']);
 });
-
+ 
 
 Route::prefix('inversiones')->group(function () {
 //Route::prefix('inversiones')->middleware('auth:sanctum')->group(function () {

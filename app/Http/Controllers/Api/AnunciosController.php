@@ -41,10 +41,11 @@ class AnunciosController extends Controller
 
 
 
-    public function sumarVisita($id)
+    public function sumarVisita($id, $idusuario = null)
     {
-        $resultado = AnunciosModel::sumarVisita($id);
-        return response()->json($resultado);
+        return response()->json(
+            AnunciosModel::sumarVisita($id, $idusuario)
+        );
     }
 
     public function listarplanos($id)
@@ -544,7 +545,7 @@ class AnunciosController extends Controller
                 'nombre' => 'required|string|max:255',
                 'email' => 'required|email|max:255',
                 'telefono' => 'required|string|max:10',
-                'dni' => 'required|string|max:10',
+                'dni' => 'required|string|max:11',
                 'mensaje' => 'required|string',
                 'anuncioid' => 'required|integer',
                 
