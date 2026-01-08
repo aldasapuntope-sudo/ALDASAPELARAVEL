@@ -1808,6 +1808,108 @@ class AdministracionController extends Controller
         }
     }
 
+    //CRUD MOTIVOS SOPORTE
+    public function listarSoportemotivos()
+    {
+        return response()->json(
+            AdministracionModel::listarSoporteMotivos()
+        );
+    }
+
+    public function registrarSoportemotivos(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:150',
+                'descripcion' => 'nullable|string|max:255',
+                'is_active' => 'boolean',
+            ]);
+
+            $id = AdministracionModel::registrarSoporteMotivo($validated);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora(
+                'Crear',
+                'soporte_motivos',
+                $id,
+                'Se registró motivo de soporte: ' . $validated['nombre']
+            );
+
+            return response()->json(
+                ['message' => 'Motivo registrado correctamente'],
+                201
+            );
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al registrar motivo: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function actualizarSoportemotivos(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:150',
+                'descripcion' => 'nullable|string|max:255',
+                'is_active' => 'boolean',
+            ]);
+
+            AdministracionModel::actualizarSoporteMotivo($id, $validated);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora(
+                'Actualizar',
+                'soporte_motivos',
+                $id,
+                'Se actualizó motivo de soporte: ' . $validated['nombre']
+            );
+
+            return response()->json(
+                ['message' => 'Motivo actualizado correctamente'],
+                200
+            );
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al actualizar motivo: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function cambiarEstadoSoportemotivos($id, Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'is_active' => 'required|boolean'
+            ]);
+
+            DB::table('soporte_motivos')
+                ->where('id', $id)
+                ->update([
+                    'is_active' => $validated['is_active'],
+                    'updated_at' => now()
+                ]);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora(
+                'Actualizar',
+                'soporte_motivos',
+                $id,
+                'Se cambió el estado del motivo de soporte.'
+            );
+
+            return response()->json([
+                'estado' => 1,
+                'mensaje' => 'Estado actualizado correctamente.'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function cambiarEstadoCaracteristicaCatalogoclub($id, Request $request)
     {
         try {

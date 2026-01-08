@@ -875,6 +875,43 @@ class AdministracionModel extends Model
             ]);
     }
 
+    // ---------------------------------------------------------
+    // CRUD SOPORTE MOTIVOS
+    // ---------------------------------------------------------
+
+    public static function listarSoporteMotivos()
+    {
+        return DB::select('
+            SELECT *
+            FROM soporte_motivos
+            ORDER BY id ASC
+        ');
+    }
+
+    public static function registrarSoporteMotivo($data)
+    {
+        return DB::table('soporte_motivos')->insertGetId([
+            'nombre' => $data['nombre'],
+            'descripcion' => $data['descripcion'] ?? null,
+            'is_active' => $data['is_active'] ?? 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    public static function actualizarSoporteMotivo($id, $data)
+    {
+        DB::table('soporte_motivos')
+            ->where('id', $id)
+            ->update([
+                'nombre' => $data['nombre'],
+                'descripcion' => $data['descripcion'] ?? null,
+                'is_active' => $data['is_active'] ?? 1,
+                'updated_at' => now(),
+            ]);
+    }
+
+
 
     //CURD MODULO AMENIDADES
     public static function listarAmenitiesclub()

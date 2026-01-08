@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\AdministracionController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\SoporteController;
+
 
 
 
@@ -232,6 +234,13 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
     Route::put('/ascripts/{id}', [AdministracionController::class, 'actualizarScripts']);
     Route::put('/escripts/{id}/estado', [AdministracionController::class, 'cambiarEstadoScripts']);
 
+    // CRUD MOTIVO SOPORTE
+    Route::get('/lsoporte-motivos', [AdministracionController::class, 'listarSoportemotivos']);
+    Route::post('/rsoporte-motivo', [AdministracionController::class, 'registrarSoportemotivos']);
+    Route::put('/asoporte-motivo/{id}', [AdministracionController::class, 'actualizarSoportemotivos']);
+    Route::put('/esoporte-motivo/{id}/estado', [AdministracionController::class, 'cambiarEstadoSoportemotivos']);
+
+
     //RUTA BITACORA
     Route::get('/lbitacora', [AdministracionController::class, 'listarbitacora']);
 
@@ -311,3 +320,9 @@ Route::post('/verify-reset-token', [PasswordResetController::class, 'verifyToken
 
 Route::get('/menus', [MenuController::class, 'index']);
 Route::get('/scripts', [AdministracionController::class, 'obtenerscripts']);
+Route::get('/soporte/tickets/{userId}', [SoporteController::class, 'misTickets']);
+Route::get('/soporte/tickets/{ticketId}/mensajes', [SoporteController::class, 'mensajesTicket']);
+Route::post('/soporte/tickets/{ticketId}/mensajes', [SoporteController::class, 'enviarMensaje']);
+
+// Admin
+Route::get('/admin/soporte/tickets', [SoporteController::class, 'todosTickets']);
