@@ -26,9 +26,9 @@ class SoporteModel
     public static function getTodosTickets()
     {
         return DB::select("
-            SELECT t.*, u.name AS usuario
+            SELECT t.*, CONCAT(u.nombre, ' ', u.apellido) AS usuario
             FROM soporte_tickets t
-            LEFT JOIN users u ON u.id = t.user_id
+            LEFT JOIN usuario u ON u.id = t.user_id
             ORDER BY t.id DESC
         ");
     }
@@ -39,10 +39,10 @@ class SoporteModel
     public static function getMensajesTicket($ticketId)
     {
         return DB::select("
-            SELECT *
-            FROM soporte_mensajes
-            WHERE ticket_id = ?
-            ORDER BY id ASC
+            SELECT spm.id, spm.ticket_id, spm.mensaje, spm.user_id, spm.created_at, CONCAT(usu.nombre, ' ', usu.apellido) as nombrecompleto
+            FROM soporte_mensajes spm  inner join usuario usu on spm.user_id = usu.id
+            WHERE spm.ticket_id = ?
+            ORDER BY spm.id ASC
         ", [$ticketId]);
     }
 
