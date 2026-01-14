@@ -665,12 +665,24 @@ class AnunciosController extends Controller
     public function buscarPropiedad(Request $request)
 {
     /* =========================
-       🔎 FILTROS (CORREGIDOS)
+       🔎 FILTROS
     ========================== */
     $q     = $request->query('q');
-    $tipos = $request->query('tipo', []); // acepta tipo[]=Casa&tipo[]=Departamento
     $mode  = $request->query('mode');
+    $tipos = $request->query('tipo');
 
+    /* 🔧 Normalizar tipo a ARRAY */
+    if (is_string($tipos)) {
+        $tipos = [$tipos];
+    }
+
+    if (!is_array($tipos)) {
+        $tipos = [];
+    }
+
+    /* =========================
+       🧱 QUERY BASE
+    ========================== */
     $query = DB::table('propiedades as p')
         ->join('ubicaciones as u', 'p.ubicacion_id', '=', 'u.id')
         ->join('tipos_propiedad as tp', 'p.tipo_id', '=', 'tp.id')
@@ -695,14 +707,13 @@ class AnunciosController extends Controller
         ->where('p.is_active', 1)
         ->where('p.is_active_publish', 1);
 
-    /* 🏠 TIPO DE PROPIEDAD (MÚLTIPLE) */
+    /* 🏠 TIPO DE PROPIEDAD */
     if (!empty($tipos)) {
         $query->whereIn('tp.nombre', $tipos);
     }
 
-    /* 🔍 BÚSQUEDA GENERAL (MULTI q) */
-    if ($q) {
-        // Permite: q=Casa de lujo,Departamento moderno
+    /* 🔍 BÚSQUEDA GENERAL */
+    if (!empty($q)) {
         $palabras = array_filter(array_map('trim', explode(',', $q)));
 
         $query->where(function ($sub) use ($palabras) {
@@ -717,17 +728,20 @@ class AnunciosController extends Controller
     }
 
     /* 🔁 OPERACIÓN (Venta / Alquiler) */
-    if ($mode) {
+    if (!empty($mode)) {
         $query->where('o.nombre', 'like', "%{$mode}%");
     }
 
+    /* =========================
+       📦 RESULTADOS
+    ========================== */
     $anuncios = $query
         ->orderBy('p.created_at', 'desc')
         ->limit(10)
         ->get();
 
     /* =========================
-       📦 DETALLES (SIN CAMBIOS)
+       📎 DETALLES
     ========================== */
     foreach ($anuncios as $anuncio) {
 
@@ -766,6 +780,7 @@ class AnunciosController extends Controller
             ->where('pa.is_active', 1)
             ->get();
 
+        /* 🖼️ IMÁGENES */
         $imagenPrincipal = collect();
         if (!empty($anuncio->imagen_principal)) {
             $imagenPrincipal->push((object)[
@@ -783,6 +798,7 @@ class AnunciosController extends Controller
 
         $anuncio->imagenes = $imagenPrincipal->merge($imagenesSecundarias);
 
+        /* 📐 PLANOS */
         $anuncio->planos = DB::table('propiedad_planos as pp')
             ->select('pp.id', 'pp.titulo', 'pp.imagen')
             ->where('pp.propiedad_id', $anuncio->id)
@@ -797,12 +813,14 @@ class AnunciosController extends Controller
                 return $plano;
             });
 
+        /* 🎥 VIDEOS */
         $anuncio->videos = DB::table('propiedad_videos as pv')
             ->select('pv.id', 'pv.titulo', 'pv.url', 'pv.tipo')
             ->where('pv.propiedad_id', $anuncio->id)
             ->where('pv.is_active', 1)
             ->get();
 
+        /* 🌐 IMAGEN 360 */
         $anuncio->imagen360 = DB::table('propiedad_imagenes360 as pimg')
             ->select('pimg.id', 'pimg.titulo', 'pimg.imagen')
             ->where('pimg.propiedad_id', $anuncio->id)
@@ -815,6 +833,7 @@ class AnunciosController extends Controller
         'data' => $anuncios
     ]);
 }
+
 
 
 
@@ -1314,6 +1333,56 @@ class AnunciosController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al registrar la suscripción'
+            ], 500);
+        }
+    }
+
+
+    public function registrarLibroReclamaciones(Request $request)
+    {
+        // 1️⃣ Validación
+        $validator = Validator::make($request->all(), [
+            'nombre'     => 'required|string|max:150',
+            'documento'  => 'required|string|max:20',
+            'correo'     => 'required|email|max:150',
+            'telefono'   => 'nullable|string|max:20',
+            'tipo'       => 'required|in:reclamo,queja',
+            'detalle'    => 'required|string|min:10',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'mensaje' => 'Datos inválidos',
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            // 2️⃣ Insertar reclamo
+            DB::table('libro_reclamaciones')->insert([
+                'nombre'     => $request->nombre,
+                'documento'  => $request->documento,
+                'correo'     => $request->correo,
+                'telefono'   => $request->telefono,
+                'tipo'       => $request->tipo,
+                'detalle'    => $request->detalle,
+                'estado'     => 'pendiente',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // 3️⃣ Respuesta OK
+            return response()->json([
+                'success' => true,
+                'mensaje' => 'Reclamo registrado correctamente'
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'mensaje' => 'Error al registrar el reclamo',
+                'error'   => $e->getMessage()
             ], 500);
         }
     }

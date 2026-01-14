@@ -615,6 +615,21 @@ class AnunciosModel extends Model
 
         // Para cada anuncio, traer sus características principales y secundarias
         foreach ($anuncios as $anuncio) {
+
+            $perfil = DB::table('usuario as usu')
+                ->join('propiedades as p', 'p.user_id', '=', 'usu.id')
+                ->select('usu.id', 'usu.nombre', 'usu.apellido', 'usu.email', 'usu.telefono', 'usu.telefono_movil', 'usu.imagen')
+                ->where('p.id', $anuncio->id)
+                ->where('p.is_active', 1)
+                ->first();
+
+            if ($perfil) {
+                $perfil->idanunciante = $perfil->id;
+                unset($perfil->id); // opcional: ocultar el ID real
+            }
+
+            $anuncio->perfilanunciante = $perfil;
+            
             // Características principales
             $anuncio->caracteristicas = DB::table('propiedad_caracteristicas as pc')
                 ->join('caracteristicas_catalogo as cc', 'pc.caracteristica_id', '=', 'cc.id')

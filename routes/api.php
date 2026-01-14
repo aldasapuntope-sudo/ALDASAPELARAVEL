@@ -111,6 +111,7 @@ Route::prefix('paginaprincipal')->group(function () {
     Route::get('/popup-config', [AdministracionController::class, 'getPopupConfig']);
     Route::get('/color', [AdministracionController::class, 'listarcolor']);
     Route::post('/suscripciones', [AnunciosController::class, 'regsuscripciones']); 
+    Route::post('/registrarlibroreclamaciones', [AnunciosController::class, 'registrarlibroreclamaciones']); 
 });
 
 
