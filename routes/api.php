@@ -95,7 +95,10 @@ Route::prefix('paginaprincipal')->group(function () {
     Route::get('/quienes-somos', [AnunciosController::class, 'getQuienessomos']);
     Route::get('/nosotros', [AnunciosController::class, 'getNosotros']);
     Route::get('/club', [AnunciosController::class, 'getClub']);
+    Route::get('/planesanuncio', [AnunciosController::class, 'getPlanes']);
     Route::get('/inversiones', [AnunciosController::class, 'getInversiones']);
+    Route::get('/aldasainversiones', [AnunciosController::class, 'getAldasainversiones']);
+    
     Route::get('/terminos-condiciones', [AnunciosController::class, 'gettermcondiciones']);
     Route::get('/publica-tu-anuncio', [AnunciosController::class, 'getpublicatuanuncio']);
     Route::get('/politicas-privacidad', [AnunciosController::class, 'getpoliticaprivacidad']);

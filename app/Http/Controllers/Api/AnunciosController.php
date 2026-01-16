@@ -854,13 +854,26 @@ class AnunciosController extends Controller
     {
         $resultado = AnunciosModel::getpagina('inversionesaldasa');
         return response()->json($resultado);
-    }
+    } 
     
     public function getClub()
     {
         $resultado = AnunciosModel::getpagina('clubaldasa');
         return response()->json($resultado);
     }
+
+    public function getPlanes()
+    {
+        $resultado = AnunciosModel::getpagina('planesanuncio');
+        return response()->json($resultado);
+    }
+
+    public function getAldasainversiones()
+    {
+        $resultado = AnunciosModel::getpagina('aldasainversiones');
+        return response()->json($resultado);
+    }
+
 
     public function gettermcondiciones()
     {
