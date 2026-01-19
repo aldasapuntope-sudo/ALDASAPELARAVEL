@@ -97,6 +97,7 @@ class AdministracionModel extends Model
             'descripcion' => $data['descripcion'] ?? '',
             'precio' => $data['precio'],
             'duracion_dias' => $data['duracion_dias'],
+            'anuncios_disponibles' => $data['anuncios_disponibles'],
             'is_active' => $data['is_active'] ?? 1,
             'created_at' => now(),
             'updated_at' => now(),
@@ -112,6 +113,7 @@ class AdministracionModel extends Model
                 'descripcion' => $data['descripcion'] ?? '',
                 'precio' => $data['precio'],
                 'duracion_dias' => $data['duracion_dias'],
+                'anuncios_disponibles' => $data['anuncios_disponibles'],
                 'is_active' => $data['is_active'] ?? 1,
                 'updated_at' => now(),
             ]);

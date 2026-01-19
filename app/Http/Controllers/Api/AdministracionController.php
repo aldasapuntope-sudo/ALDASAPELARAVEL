@@ -9,6 +9,7 @@ use App\Models\BitacoraModel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class AdministracionController extends Controller
 {
@@ -175,6 +176,7 @@ class AdministracionController extends Controller
                 //'descripcion' => 'nullable|string|max:255',
                 'precio' => 'required|numeric|min:0',
                 'duracion_dias' => 'required|integer|min:1',
+                'anuncios_disponibles' => 'required|integer|min:1',
                 'is_active' => 'boolean',
             ]);
 
@@ -198,6 +200,7 @@ class AdministracionController extends Controller
                 //'descripcion' => 'nullable|string|max:255',
                 'precio' => 'required|numeric|min:0',
                 'duracion_dias' => 'required|integer|min:1',
+                'anuncios_disponibles' => 'required|integer|min:1',
                 'is_active' => 'boolean',
             ]);
 
@@ -2008,6 +2011,157 @@ class AdministracionController extends Controller
     public function listarvisitaspropiedad($id)
     {
         return response()->json(AdministracionModel::listarvisitaspropiedad($id));
+    }
+
+
+    public function registrarculqi(Request $request)
+    {
+        try {
+            $request->validate([
+                'culqi_token' => 'required|string',
+                'plan_id'     => 'required|integer|exists:planes,id'
+            ]);
+
+            $user = auth()->user();
+
+            // 🔹 Obtener plan
+            $plan = DB::table('planes')->where('id', $request->plan_id)->first();
+
+            if (!$plan || !$plan->is_active) {
+                return response()->json([
+                    'estado' => 0,
+                    'mensaje' => 'Plan no disponible'
+                ], 400);
+            }
+
+            /**
+             * 🔐 AQUÍ VA EL COBRO REAL CON CULQI
+             * (cuando lo conectes de verdad)
+             */
+
+            // 🔹 Fechas
+            $fechaInicio = Carbon::now();
+            $fechaFin    = Carbon::now()->addDays($plan->duracion_dias);
+
+            // 🔹 Desactivar planes anteriores
+            DB::table('usuarios_planes')
+                ->where('user_id', $user->id)
+                ->where('is_active', 1)
+                ->update([
+                    'is_active'  => 0,
+                    'estado'     => 'vencido',
+                    'updated_at' => now()
+                ]);
+
+            // 🔹 Registrar nuevo plan
+            DB::table('usuarios_planes')->insert([
+                'user_id'              => $user->id,
+                'plan_id'              => $plan->id,
+                'fecha_inicio'         => $fechaInicio,
+                'fecha_fin'            => $fechaFin,
+                'anuncios_disponibles' => $plan->anuncios_disponibles,
+                'is_active'            => 1,
+                'estado'               => 'activo',
+                'created_at'           => now(),
+                'updated_at'           => now()
+            ]);
+
+            // 🔹 REGISTRAR PAGO ✅ (AQUÍ EL CAMBIO)
+            DB::table('pagos')->insert([
+                'user_id'    => $user->id,
+                'plan_id'    => $plan->id,
+                'monto'      => $plan->precio, // asegúrate que exista en planes
+                'metodo'     => 'Culqi',        // luego puedes cambiar a Visa / Yape
+                'estado'     => 'Completado',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            return response()->json([
+                'estado' => 1,
+                'mensaje' => 'Plan activado correctamente',
+                'fecha_inicio' => $fechaInicio,
+                'fecha_fin' => $fechaFin
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Error al procesar el pago',
+                'detalle' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function registrarculqiclub(Request $request)
+    {
+        try {
+            $request->validate([
+                'culqi_token' => 'required|string',
+                'plan_id'     => 'required|integer|exists:planes,id'
+            ]);
+
+            $user = auth()->user();
+
+            // 🔹 Obtener plan
+            $plan = DB::table('planesclub')->where('id', $request->plan_id)->first();
+
+            if (!$plan || !$plan->is_active) {
+                return response()->json([
+                    'estado' => 0,
+                    'mensaje' => 'Plan no disponible'
+                ], 400);
+            }
+
+            /**
+             * 🔐 AQUÍ VA EL COBRO REAL CON CULQI
+             * (cuando lo conectes de verdad)
+             */
+
+            // 🔹 Fechas
+            $fechaInicio = Carbon::now();
+            $fechaFin    = Carbon::now()->addDays($plan->duracion_dias);
+
+            // 🔹 Desactivar planes anteriores
+            DB::table('usuarios_planesclub')
+                ->where('user_id', $user->id)
+                ->where('is_active', 1)
+                ->update([
+                    'is_active'  => 0,
+                    'estado'     => 'vencido',
+                    'updated_at' => now()
+                ]);
+
+            // 🔹 Registrar nuevo plan
+            DB::table('usuarios_planesclub')->insert([
+                'user_id'              => $user->id,
+                'plan_id'              => $plan->id,
+                'fecha_inicio'         => $fechaInicio,
+                'fecha_fin'            => $fechaFin,
+                //'anuncios_disponibles' => $plan->anuncios_disponibles,
+                'is_active'            => 1,
+                'estado'               => 'activo',
+                'created_at'           => now(),
+                'updated_at'           => now()
+            ]);
+
+           
+
+            return response()->json([
+                'estado' => 1,
+                'mensaje' => 'Plan activado correctamente',
+                'fecha_inicio' => $fechaInicio,
+                'fecha_fin' => $fechaFin
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Error al procesar el pago',
+                'detalle' => $e->getMessage()
+            ], 500);
+        }
     }
 } 
  
