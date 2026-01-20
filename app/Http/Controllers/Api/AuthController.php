@@ -9,6 +9,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UsuarioModel;
 
+use Illuminate\Support\Facades\DB;
+
 class AuthController extends Controller
 {
     /**
@@ -86,6 +88,7 @@ class AuthController extends Controller
             return response()->json(['error' => 'Token no recibido'], 400);
         }
 
+        // Obtener datos del usuario desde Google
         $res = Http::withHeaders([
             'Authorization' => 'Bearer ' . $accessToken,
         ])->get('https://www.googleapis.com/oauth2/v3/userinfo');
@@ -95,23 +98,30 @@ class AuthController extends Controller
         }
 
         $userData = $res->json();
-        $email = $userData['email'];
-        $name = $userData['name'];
-        $picture = $userData['picture'] ?? null;
-        $givenName = $userData['given_name'] ?? null;
-        $familyName = $userData['family_name'] ?? null;
 
+        $email       = $userData['email'];
+        $name        = $userData['name'];
+        $picture     = $userData['picture'] ?? null;
+        $givenName   = $userData['given_name'] ?? null;
+        $familyName  = $userData['family_name'] ?? null;
+
+        // Validar si existe en sistema propio
         $resultado = UsuarioModel::validarAlumnoPorCorreo($email);
         $datosAlumno = $resultado[0] ?? null;
 
-        // Crear usuario Laravel (para Sanctum)
+        // Crear u obtener usuario Laravel (Sanctum)
         $user = User::firstOrCreate(
             ['email' => $email],
-            ['name' => $name, 'password' => Hash::make(uniqid())]
+            [
+                'name' => $name,
+                'password' => Hash::make(uniqid())
+            ]
         );
 
+        // Crear token Sanctum
         $token = $user->createToken('google-token')->plainTextToken;
 
+        // Si no existe en sistema propio, crear
         if (empty($resultado)) {
             $data = [
                 'success' => true,
@@ -122,17 +132,34 @@ class AuthController extends Controller
                 'tipoUsuario' => '3',
                 'condicionFiscal' => '1',
                 'documento' => '',
-                'password' => Hash::make(uniqid()), // bcrypt seguro
+                'password' => Hash::make(uniqid()),
                 'telefono' => null,
                 'movil' => null,
                 'imagen' => $picture
             ];
 
             UsuarioModel::crearUsuariogoogle($data);
+
             $resultado = UsuarioModel::validarAlumnoPorCorreo($email);
             $datosAlumno = $resultado[0] ?? null;
         }
 
+        // 🔎 BUSCAR PLAN ACTIVO (SIN MODELOS)
+        $planActivo = DB::table('usuarios_planes as up')
+            ->join('planes as p', 'p.id', '=', 'up.plan_id')
+            ->where('up.user_id', $user->id)
+            ->where('up.is_active', 1)
+            ->where('up.estado', 'activo')
+            ->where(function ($q) {
+                $q->whereNull('up.fecha_fin')
+                ->orWhere('up.fecha_fin', '>=', now());
+            })
+            ->select('p.nombre as plan')
+            ->first();
+
+        $nombrePlan = $planActivo ? $planActivo->plan : 0;
+
+        // Respuesta final
         return response()->json([
             'success' => true,
             'token' => $token,
@@ -142,6 +169,8 @@ class AuthController extends Controller
             'givenName' => $givenName,
             'familyName' => $familyName,
             'usuarioaldasa' => $datosAlumno,
+            'planActivo' => $nombrePlan
         ], 200);
     }
+
 }
