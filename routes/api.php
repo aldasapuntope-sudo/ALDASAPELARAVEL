@@ -61,6 +61,7 @@ Route::prefix('misanuncios')->group(function () {
     Route::get('/monedas', [AnunciosController::class, 'getmonedas']);
 
     Route::post('/vendido/{id}', [AnunciosController::class, 'actualizarvendido']); 
+    Route::put('/habilitaranuncio/{id}', [AnunciosController::class, 'habilitaranuncio']); 
     
 });
 

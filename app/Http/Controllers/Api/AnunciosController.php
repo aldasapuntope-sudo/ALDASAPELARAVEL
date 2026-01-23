@@ -495,6 +495,31 @@ class AnunciosController extends Controller
     }
 
 
+    public function habilitaranuncio($id)
+    {
+        $anuncio = DB::table('propiedades')->where('id', $id)->first();
+
+        if (!$anuncio) {
+            return response()->json([
+                'success' => false,
+                'mensaje' => 'Anuncio no encontrado'
+            ], 404);
+        }
+
+        DB::table('propiedades')
+            ->where('id', $id)
+            ->update([
+                'is_active_publish' => 1,
+                'updated_at' => now()
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'mensaje' => 'Anuncio habilitado correctamente'
+        ]);
+    }
+
+
 
     public function categoriasCatalogo($tpropiedad)
     {
