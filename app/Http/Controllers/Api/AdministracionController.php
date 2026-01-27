@@ -1045,6 +1045,50 @@ class AdministracionController extends Controller
     }
 
 
+    // ✅ CRUD MODULO LIBRO RECLAMACIONES
+    public function llibroreclamaciones()
+    {
+        return response()->json(AdministracionModel::llibroreclamaciones());
+    }
+
+    public function cambiarEstadoLibroReclamaciones($id, Request $request)
+    {
+        
+        try {
+            $validated = $request->validate([
+                'estado' => 'required|in:pendiente,atendido,cerrado'
+            ]);
+
+            DB::table('libro_reclamaciones')
+                ->where('id', $id)
+                ->update([
+                    'estado' => $validated['estado'],
+                    'updated_at' => now()
+                ]);
+
+            // 🔹 Bitácora
+            $this->registrarBitacora(
+                'Actualizar',
+                'libro_reclamaciones',
+                $id,
+                'Se cambió el estado del reclamo a: ' . $validated['estado']
+            );
+
+            return response()->json([
+                'estado' => 1,
+                'mensaje' => 'Estado actualizado correctamente.'
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+
 
     public function listarSliders()
     {
@@ -2163,5 +2207,36 @@ class AdministracionController extends Controller
             ], 500);
         }
     }
+
+
+    public function inmobiliariasDestacadas()
+    {
+        $inmobiliarias = DB::table('propiedades as p')
+            ->join('usuario as u', 'u.id', '=', 'p.user_id')
+            ->join('perfiles as pe', 'pe.id', '=', 'u.perfil_id')
+            ->where('pe.id', 4) // Inmobiliaria
+            ->where('p.is_active', 1)
+            ->where('p.is_active_publish', 1)
+            ->groupBy(
+                'u.id',
+                'u.nombre',
+                'u.apellido',
+                'u.razon_social',
+                'u.imagen'
+            )
+            ->select(
+                'u.id as inmobiliaria_id',
+                DB::raw("COALESCE(u.razon_social, CONCAT(u.nombre,' ',u.apellido)) as nombre"),
+                'u.imagen as logo',
+                DB::raw('SUM(p.visitas) as total_visitas'),
+                DB::raw('COUNT(p.id) as total_propiedades')
+            )
+            ->orderByDesc('total_visitas')
+            ->limit(6)
+            ->get();
+
+        return response()->json($inmobiliarias);
+    }
+
 } 
  

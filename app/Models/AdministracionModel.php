@@ -501,11 +501,28 @@ class AdministracionModel extends Model
 
 
     // CRUD MODULO BITACORA
-    public static function listarbitacora()
+    /*public static function listarbitacora()
     {
         return DB::table('bitacora')
             ->orderBy('id', 'asc')
             ->get();
+    }*/
+
+    public static function listarbitacora()
+    {
+        return DB::table('bitacora as b')
+            ->leftJoin('usuario as u', 'u.id', '=', 'b.user_id')
+            ->select(
+                'b.*',
+                DB::raw("COALESCE(u.razon_social, CONCAT(u.nombre, ' ', u.apellido)) as usuario")
+            )
+            ->orderBy('b.id', 'asc')
+            ->get();
+    }
+
+    public static function llibroreclamaciones()
+    {
+        return DB::select('SELECT * FROM libro_reclamaciones');
     }
 
 
@@ -969,7 +986,7 @@ class AdministracionModel extends Model
             p.direccion AS ubicacion,
             p.visitas,
 
-            -- 🔹 SLUG GENERADO
+            -- SLUG GENERADO
             LOWER(
               REPLACE(
                 REPLACE(

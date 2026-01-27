@@ -73,6 +73,7 @@ Route::prefix('planes')->group(function () {
 
 
 Route::prefix('paginaprincipal')->group(function () { 
+    Route::get('/inmobdestacadas', [AdministracionController::class, 'inmobiliariasDestacadas']); 
     Route::get('/motivosoporteayuda', [AdministracionController::class, 'listarmotivosoporteayuda']); 
     Route::post('/ticketssoporteyayuda/{id}', [AdministracionController::class, 'registrarticketssoprote']);
     Route::post('/actualizar-perfil/{id}', [AdministracionController::class, 'subirperfilusuario']);
@@ -116,6 +117,7 @@ Route::prefix('paginaprincipal')->group(function () {
     Route::get('/color', [AdministracionController::class, 'listarcolor']);
     Route::post('/suscripciones', [AnunciosController::class, 'regsuscripciones']); 
     Route::post('/registrarlibroreclamaciones', [AnunciosController::class, 'registrarlibroreclamaciones']); 
+    
 });
 
 
@@ -251,6 +253,11 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
 
     //RUTA BITACORA
     Route::get('/lbitacora', [AdministracionController::class, 'listarbitacora']);
+    
+
+    //RUTA LIBRO RECLAMACIONES
+    Route::get('/llibroreclamaciones', [AdministracionController::class, 'llibroreclamaciones']);
+    Route::put('/alibroreclamaciones/{id}/estado', [AdministracionController::class, 'cambiarEstadoLibroReclamaciones']);
 
     //CRUD MODULO POPUPS CONFIGURACION
     Route::get('/lpopupconfig', [AdministracionController::class, 'listarPopupConfig']);
