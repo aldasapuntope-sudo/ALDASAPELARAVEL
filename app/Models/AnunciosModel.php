@@ -466,7 +466,8 @@ class AnunciosModel extends Model
                 'p.direccion',
                 'p.imagen_principal',
                 'p.visitas',
-                'p.is_active_publish'
+                'p.is_active_publish',
+                'p.user_id'
             )
             ->where('p.is_active', 1)
             ->where('p.is_active_publish', $idpublish);
