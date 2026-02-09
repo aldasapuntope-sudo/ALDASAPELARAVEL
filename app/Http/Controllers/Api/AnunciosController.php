@@ -670,6 +670,95 @@ class AnunciosController extends Controller
         }
     }
 
+    public function actualizarPopupbusquedasguardadas(Request $request, $id)
+    {
+        try {
+
+            $validated = $request->validate([
+                'titulo' => 'required|string|max:255',
+                'alerta' => 'required|in:sinalertas,inmediata,diaria,semanal',
+            ]);
+
+            $busqueda = DB::table('busquedas_guardadas')
+                ->where('id', $id)
+                ->where('is_active', 1)
+                ->first();
+
+            if (!$busqueda) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Búsqueda no encontrada'
+                ], 404);
+            }
+
+            DB::table('busquedas_guardadas')
+                ->where('id', $id)
+                ->update([
+                    'titulo' => $validated['titulo'],
+                    'alerta' => $validated['alerta'],
+                    'updated_at' => now()
+                ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Búsqueda actualizada correctamente'
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar la búsqueda',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function cambiarEstadoBusquedasGuardadas($id)
+    {
+        try {
+
+            $busqueda = DB::table('busquedas_guardadas')
+                ->where('id', $id)
+                ->first();
+
+            if (!$busqueda) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Búsqueda no encontrada'
+                ], 404);
+            }
+
+            DB::table('busquedas_guardadas')
+                ->where('id', $id)
+                ->update([
+                    'is_active' => 0,
+                    'updated_at' => now()
+                ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Búsqueda eliminada correctamente'
+            ], 200);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar la búsqueda',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 
 
     //FILTROS PAGINA PRINCIPAL

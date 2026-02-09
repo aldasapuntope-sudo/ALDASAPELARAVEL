@@ -92,8 +92,7 @@ Route::prefix('paginaprincipal')->group(function () {
     });
 
     Route::post('/rmensajeanunciante', [AnunciosController::class, 'registrarmensajeanunciante']); 
-    Route::post('/busquedas-guardadas', [AnunciosController::class, 'registrarbusquedasguardadas']); 
-    Route::get('/lbusquedas-guardadas/{id}', [AnunciosController::class, 'getidbusquedasguardadas']);
+    
     
     //FILTROS DE PAGINA PRINCIPAL
     Route::get('/propiedades/relacionadas/{tipo_id}/{id}', [AnunciosController::class, 'getRelacionadas']);
@@ -270,6 +269,11 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
     //CONSULTAS EXTRAS 
     Route::get('/lmensajecontactos/{id}', [AdministracionController::class, 'listarmensajecontactos']);
     Route::get('/lhistorialvisitapropiedad/{id}', [AdministracionController::class, 'listarvisitaspropiedad']);
+
+    Route::post('/busquedas-guardadas', [AnunciosController::class, 'registrarbusquedasguardadas']); 
+    Route::get('/lbusquedas-guardadas/{id}', [AnunciosController::class, 'getidbusquedasguardadas']);
+    Route::put('/ebusquedas-guardadas/{id}', [AnunciosController::class, 'cambiarEstadoBusquedasGuardadas']);
+    Route::put('/abusquedas-guardadas/{id}', [AnunciosController::class, 'actualizarPopupbusquedasguardadas']);
 });
  
 
