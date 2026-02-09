@@ -81,6 +81,7 @@ Route::prefix('paginaprincipal')->group(function () {
     Route::get('/obtener-configuraciones', [AdministracionController::class, 'obtenerConfiguraciones']);
     Route::get('/tipos-operacion', [AnunciosController::class, 'tiposOperacion']); 
     Route::get('/tipos-propiedad', [AnunciosController::class, 'tiposPropiedad']);
+    Route::get('/tipos-ubicaciones', [AnunciosController::class, 'tiposUbicaciones']); 
     Route::get('/propiedades/buscar', [AnunciosController::class, 'buscarpropiedad']);
     Route::post('/propiedades/visita/{id}/{idusuario}', [AnunciosController::class, 'sumarVisita']);
     Route::get('/listaranuncios/{is_publish}', [AnunciosController::class, 'listaranuncioprincipal']); 
@@ -91,7 +92,9 @@ Route::prefix('paginaprincipal')->group(function () {
     });
 
     Route::post('/rmensajeanunciante', [AnunciosController::class, 'registrarmensajeanunciante']); 
-
+    Route::post('/busquedas-guardadas', [AnunciosController::class, 'registrarbusquedasguardadas']); 
+    Route::get('/lbusquedas-guardadas/{id}', [AnunciosController::class, 'getidbusquedasguardadas']);
+    
     //FILTROS DE PAGINA PRINCIPAL
     Route::get('/propiedades/relacionadas/{tipo_id}/{id}', [AnunciosController::class, 'getRelacionadas']);
     Route::get('/quienes-somos', [AnunciosController::class, 'getQuienessomos']);

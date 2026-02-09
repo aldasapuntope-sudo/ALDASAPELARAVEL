@@ -789,6 +789,42 @@ class AnunciosModel extends Model
         return $data;
     }
 
+    public static function guardarBusquedaGuardada(
+        $titulo,
+        $url_filtro,
+        $alerta = 'inmediata',
+        $usuario_id = null
+    ) {
+        $data = [
+            'titulo'      => $titulo,
+            'url_filtro'  => $url_filtro,
+            'alerta'      => $alerta,
+            'usuario_id'  => $usuario_id,
+            'is_active'      => 1,
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ];
+
+        DB::table('busquedas_guardadas')->insert($data);
+
+        return $data;
+    }
+
+    public static function getBusquedasGuardadasByUsuario($usuario_id)
+    {
+        return DB::table('busquedas_guardadas')
+            ->where('usuario_id', $usuario_id)
+            ->where('is_active', 1)
+            ->orderBy('created_at', 'desc')
+            ->get([
+                'id',
+                'titulo',
+                'url_filtro',
+                'alerta',
+                'created_at'
+            ]);
+    }
+
 
     public static function getpagina($id)
     {

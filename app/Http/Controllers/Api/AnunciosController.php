@@ -609,6 +609,69 @@ class AnunciosController extends Controller
     }
 
 
+    public function registrarbusquedasguardadas(Request $request)
+    {
+        try {
+            // ✅ Validación
+            $validated = $request->validate([
+                'titulo'     => 'required|string|max:255',
+                'url_filtro' => 'required|string',
+                'alerta'     => 'nullable|in:inmediata,diaria,semanal,ninguna',
+                'usuario_id' => 'nullable|integer',
+            ]);
+
+            // ✅ Guardar búsqueda
+            $busqueda = AnunciosModel::guardarBusquedaGuardada(
+                $validated['titulo'],
+                $validated['url_filtro'],
+                $validated['alerta'] ?? 'inmediata',
+                $validated['usuario_id'] ?? null
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Búsqueda guardada correctamente',
+                'data'    => $busqueda
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+
+            return response()->json([
+                'success' => false,
+                'errors'  => $e->errors(),
+            ], 422);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al guardar la búsqueda',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getidbusquedasguardadas($id)
+    {
+        try {
+            $busquedas = AnunciosModel::getBusquedasGuardadasByUsuario($id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $busquedas
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener las búsquedas guardadas',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+
     //FILTROS PAGINA PRINCIPAL
     public function getRelacionadas($tipo_id, $idActual)
     {
