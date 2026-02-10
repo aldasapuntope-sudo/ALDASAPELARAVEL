@@ -635,10 +635,24 @@ class AdministracionModel extends Model
     //CRUD MODULO USUARIOS
     public static function listarUsuarios()
     {
+        return DB::table('usuario as u')
+            ->join('perfiles as p', 'u.perfil_id', '=', 'p.id')
+            ->join('tipos_documento as td', 'u.tipo_documento_id', '=', 'td.id')
+            ->select(
+                'u.*',
+                'p.nombre as perfil_nombre',
+                'td.nombre as tipo_documento_nombre'
+            )
+            ->orderBy('u.id', 'desc')
+            ->get();
+    }
+
+    /*public static function listarUsuarios()
+    {
         return DB::table('usuario')
             ->orderBy('id', 'desc')
             ->get();
-    }
+    }*/
 
     public static function registrarUsuarios($data)
     {
