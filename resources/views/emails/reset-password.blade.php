@@ -8,7 +8,7 @@
     <table align="center" width="100%" cellpadding="0" cellspacing="0" style="max-width: 830px; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
         <tr>
             <td style="background-color: #28a745; color: white; text-align: center; padding: 20px 0;">
-            <img width="200" height="60" alt="logo" class="img-fluid" src="http://localhost/imagenes_configuraciones/config_lcmPRg7pCl.png">    
+            <img width="200" height="60" alt="logo" class="img-fluid" src="https://aldasa.pe/assets/images/logo-aldasape-color.png" style="background: white;padding: 11px;border-radius: 10px;">    
             <h2 style="margin: 0;">Recuperación de Contraseña</h2>
             </td>
         </tr>
