@@ -987,40 +987,78 @@ class AdministracionModel extends Model
     }
 
     public static function listarvisitaspropiedad($id)
-{
-    return DB::select("
-        SELECT 
-            pv.id,
-            pv.created_at,
-            p.id AS propiedad_id,
-            p.titulo,
-            p.precio,
-            p.imagen_principal,
-            ubi.nombre AS ubicaciones,
-            p.direccion AS ubicacion,
-            p.visitas,
+    {
+        return DB::select("
+            SELECT 
+                pv.id,
+                pv.created_at,
+                p.id AS propiedad_id,
+                p.titulo,
+                p.precio,
+                p.imagen_principal,
+                ubi.nombre AS ubicaciones,
+                p.direccion AS ubicacion,
+                p.visitas,
 
-            -- SLUG GENERADO
-            LOWER(
-              REPLACE(
+                -- SLUG GENERADO
+                LOWER(
                 REPLACE(
-                  CONCAT(p.titulo, '-', ubi.nombre),
-                  ' ',
-                  '-'
-                ),
-                '--',
-                '-'
-              )
-            ) AS slug
+                    REPLACE(
+                    CONCAT(p.titulo, '-', ubi.nombre),
+                    ' ',
+                    '-'
+                    ),
+                    '--',
+                    '-'
+                )
+                ) AS slug
 
-        FROM propiedad_visitas pv
-        INNER JOIN propiedades p ON p.id = pv.propiedad_id
-        INNER JOIN ubicaciones ubi ON p.ubicacion_id = ubi.id
-        WHERE pv.user_id = ?
-        ORDER BY pv.created_at DESC
-    ", [$id]);
-}
+            FROM propiedad_visitas pv
+            INNER JOIN propiedades p ON p.id = pv.propiedad_id
+            INNER JOIN ubicaciones ubi ON p.ubicacion_id = ubi.id
+            WHERE pv.user_id = ?
+            ORDER BY pv.created_at DESC
+        ", [$id]);
+    }
 
-  
+
+    //CRUD CHATBOX MODEL
+    public static function listarChatrespuestas()
+    {
+        return DB::table('chat_respuestas')
+            ->orderBy('prioridad', 'asc')
+            ->orderBy('id', 'desc')
+            ->get();
+    }
+    
+    public static function registrarChatrespuestas($data)
+    {
+        return DB::table('chat_respuestas')->insertGetId([
+            'palabras_clave' => $data['palabras_clave'],
+            'respuesta' => $data['respuesta'],
+            'prioridad' => $data['prioridad'] ?? 1,
+            'is_active' => $data['is_active'] ?? 1,
+            'created_at' => now(),
+        ]);
+    }
+
+    public static function obtenerChatrespuestaPorId($id)
+    {
+        return DB::table('chat_respuestas')
+            ->where('id', $id)
+            ->first();
+    }
+
+    public static function actualizarChatrespuestas($id, $data)
+    {
+        return DB::table('chat_respuestas')
+            ->where('id', $id)
+            ->update([
+                'palabras_clave' => $data['palabras_clave'],
+                'respuesta' => $data['respuesta'],
+                'prioridad' => $data['prioridad'] ?? 1,
+                'is_active' => $data['is_active'] ?? 1,
+            ]);
+    }
 
 }

@@ -73,6 +73,7 @@ Route::prefix('planes')->group(function () {
 
 
 Route::prefix('paginaprincipal')->group(function () { 
+    Route::post('/busqueda-sin-resultados', [AdministracionController::class, 'registrarbusquedasinresutlados']); 
     Route::get('/inmobdestacadas', [AdministracionController::class, 'inmobiliariasDestacadas']); 
     Route::get('/motivosoporteayuda', [AdministracionController::class, 'listarmotivosoporteayuda']); 
     Route::post('/ticketssoporteyayuda/{id}', [AdministracionController::class, 'registrarticketssoprote']);
@@ -257,6 +258,13 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
     Route::get('/lbitacora', [AdministracionController::class, 'listarbitacora']);
     
 
+    //CONSULTAS CHATBOX
+    Route::get('/chat/conversaciones', [AdministracionController::class, 'listarConversaciones']);
+    Route::get('/lchat-respuestas', [AdministracionController::class, 'listarChatrespuestas']);
+    Route::post('/rchat-respuesta', [AdministracionController::class, 'registrarChatrespuestas']);
+    Route::put('/achat-respuesta/{id}', [AdministracionController::class, 'actualizarChatrespuestas']);
+    Route::put('/echat-respuesta/{id}/estado', [AdministracionController::class, 'cambiarEstadoChatrespuestas']);
+
     //RUTA LIBRO RECLAMACIONES
     Route::get('/llibroreclamaciones', [AdministracionController::class, 'llibroreclamaciones']);
     Route::put('/alibroreclamaciones/{id}/estado', [AdministracionController::class, 'cambiarEstadoLibroReclamaciones']);
@@ -274,6 +282,8 @@ Route::prefix('administracion')->middleware('auth:sanctum')->group(function () {
     Route::get('/lbusquedas-guardadas/{id}', [AnunciosController::class, 'getidbusquedasguardadas']);
     Route::put('/ebusquedas-guardadas/{id}', [AnunciosController::class, 'cambiarEstadoBusquedasGuardadas']);
     Route::put('/abusquedas-guardadas/{id}', [AnunciosController::class, 'actualizarPopupbusquedasguardadas']);
+
+    
 });
  
 

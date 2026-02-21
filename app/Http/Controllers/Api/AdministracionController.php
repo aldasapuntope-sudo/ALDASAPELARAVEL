@@ -4,12 +4,17 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Mail\Mailable;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\BusquedaSinResultadosMail;
+use Illuminate\Queue\SerializesModels;
 use App\Models\AdministracionModel;
 use App\Models\BitacoraModel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+
 
 class AdministracionController extends Controller
 {
@@ -2238,5 +2243,152 @@ class AdministracionController extends Controller
         return response()->json($inmobiliarias);
     }
 
+
+    public function registrarbusquedasinresutlados(Request $request)
+    {
+        $data = $request->validate([
+            'nombre'   => 'required|string|max:255',
+            'telefono' => 'required|string|max:50',
+            'correo'   => 'required|email|max:255',
+            'mensaje'  => 'required|string',
+        ]);
+
+        // 📩 Correo destino (puedes hacerlo dinámico luego)
+        $correoDestino = "aldasapuntope@gmail.com";
+
+        Mail::to($correoDestino)
+            ->send(new BusquedaSinResultadosMail($data));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Solicitud enviada correctamente'
+        ], 200);
+    }
+
+
+    //CRUD CHATBOX
+    public function listarConversaciones()
+    {
+        $conversaciones = \DB::table('chat_conversaciones as u')
+            ->leftJoin('chat_conversaciones as b', function ($join) {
+                $join->on('u.session_id', '=', 'b.session_id')
+                    ->where('u.emisor', 'user')
+                    ->where('b.emisor', 'bot')
+                    ->whereRaw('b.id = (
+                        SELECT MIN(id)
+                        FROM chat_conversaciones
+                        WHERE session_id = u.session_id
+                        AND emisor = "bot"
+                        AND id > u.id
+                    )');
+            })
+            ->where('u.emisor', 'user')
+            ->select(
+                'u.id',
+                'u.session_id',
+                'u.mensaje as pregunta',
+                'b.mensaje as respuesta',
+                'u.created_at'
+            )
+            ->orderBy('u.created_at', 'desc')
+            ->get();
+
+        return response()->json($conversaciones);
+    }
+
+    public function listarChatrespuestas()
+    {
+        return response()->json(AdministracionModel::listarChatrespuestas());
+    }
+
+    public function registrarChatrespuestas(Request $request)
+    {
+        try {
+
+            $validated = $request->validate([
+                'palabras_clave' => 'required|string|max:255',
+                'respuesta' => 'required|string',
+                'prioridad' => 'nullable|integer',
+                'is_active' => 'boolean',
+            ]);
+
+            AdministracionModel::registrarChatrespuestas($validated);
+
+            return response()->json([
+                'estado' => 1,
+                'mensaje' => 'Respuesta registrada correctamente.'
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function actualizarChatrespuestas(Request $request, $id)
+    {
+        try {
+
+            $validated = $request->validate([
+                'palabras_clave' => 'required|string|max:255',
+                'respuesta' => 'required|string',
+                'prioridad' => 'nullable|integer',
+                'is_active' => 'boolean',
+            ]);
+
+            $respuestaActual = AdministracionModel::obtenerChatrespuestaPorId($id);
+
+            if (!$respuestaActual) {
+                return response()->json([
+                    'estado' => 0,
+                    'mensaje' => 'Respuesta no encontrada.'
+                ], 404);
+            }
+
+            AdministracionModel::actualizarChatrespuestas($id, $validated);
+
+            return response()->json([
+                'estado' => 1,
+                'mensaje' => 'Respuesta actualizada correctamente.'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function cambiarEstadoChatrespuestas($id, Request $request)
+    {
+        try {
+
+            $validated = $request->validate([
+                'is_active' => 'required|boolean'
+            ]);
+
+            DB::table('chat_respuestas')
+                ->where('id', $id)
+                ->update([
+                    'is_active' => $validated['is_active'],
+                ]);
+
+            $this->registrarBitacora('Actualizar', 'chat_respuestas', $id, 'Se cambió el estado de la respuesta.');
+
+            return response()->json([
+                'estado' => 1,
+                'mensaje' => 'Estado actualizado correctamente.'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'estado' => 0,
+                'mensaje' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 } 
  
